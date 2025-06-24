@@ -221,60 +221,50 @@
 
       // --- KONFIGURACE PRO UNIVERZÁLNOST ---
       const LOGICAL_BLOCK_SELECTORS = [
-        // === NOVÉ SELEKTORY PRO DVOU-SLOUPCOVÉ KOMPONENTY (NEJVYŠŠÍ PRIORITA) ===
-        // Cílí na TD elementy jednotlivých sloupců v email-2.html a podobných strukturách
-        // Tyto by měly být dostatečné, i když se klikne na jejich vnitřní části (img, h3),
-        // protože findLogicalComponentBlock() prochází DOM směrem nahoru.
-        'table.es-left > tbody > tr > td[width="298px"]', // Specificky pro levý sloupec v email-2 (ikona+text)
-        'table.es-right > tbody > tr > td[width="302px"]', // Specificky pro pravý sloupec v email-2 (ikona+text)
-        'table.es-left > tbody > tr > td[class*="es-m-p"]', // Obecnější pro levé sloupce s mobilním paddingem (např. es-m-p20b)
-        'table.es-right > tbody > tr > td[class*="es-m-p"]', // Obecnější pro pravé sloupce s mobilním paddingem
+        // === NOVÝ, STRUKTURÁLNÍ SELEKTOR pro hlavní obsahové buňky s paddingem ===
+        'table.es-content-body > tbody > tr > td[align="left"][style*="padding"]',
 
-        // Selektor pro TD, které je přímým rodičem tabulky s ikonou a textem, pokud nemá specifickou šířku.
-        // Toto je méně ideální, ale může zachytit podobné struktury.
-        // 'td:has(> table[role="presentation"]:has(img[width="55"]))', // CSS :has() není univerzálně podporováno v JS DOM query
-
-        // === PŮVODNÍ SELEKTORY (UPRAVENÉ POŘADÍ A PRIORITA) ===
+        // === NEJVYŠŠÍ PRIORITA PRO SPECIFICKÉ TLAČÍTKO ===
         // Přesný selektor pro tabulku tlačítka z email-1.html, která má width="250px" a specifický styl.
-        'table[width="250"][role="presentation"][style*="border-collapse: separate"]',
-        'table[role="presentation"][style*="width: 250px"][style*="border-collapse: separate"]',
+        // Používáme atribut width přímo, pokud je přítomen, a doplňujeme kontrolou stylu.
+        'table[width="250"][role="presentation"][style*="border-collapse: separate"]', // Primární pro tlačítko 250px
+        'table[role="presentation"][style*="width: 250px"][style*="border-collapse: separate"]', // Alternativa, pokud width není atribut
 
         // Obecnější selektory pro tabulky s pevnou pixelovou šířkou (často tlačítka nebo malé bloky)
-        'table[role="presentation"][style*="width:"][style*="px"][style*="border-collapse: separate"]',
-        'table[role="presentation"][style*="width:"][style*="px"]',
+        'table[role="presentation"][style*="width:"][style*="px"][style*="border-collapse: separate"]', // Tabulky s pevnou šířkou a oddělenými okraji
+        'table[role="presentation"][style*="width:"][style*="px"]', // Jakákoliv tabulka s role="presentation" a pevnou pixelovou šířkou ve stylu
 
         // Selektory pro odkazy stylizované jako tlačítka
-        'a.es-button[href]', // Specificky pro odkazy s třídou es-button
-        'span.es-button-border > a.es-button[href]', // Pokud je odkaz vnořený
-        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"]',
-        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"] > span',
+        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"]', // Samotný odkaz tlačítka
+        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"] > span', // Pokud by se kliklo přímo na span uvnitř odkazu tlačítka
 
         // Selektory z email-1 (Carvago) - pro větší bloky
-        'div.n.y',
-        '.r.lp.jn.lz.dhn',
-        'div.r.eya.yss',
-        'div.r.aue.uo8',
-        'table.r.aue.uo8',
-        'div.p',
+        'div.n.y', // Kontejner pro tlačítko v email-1 (pokud by se kliklo na něj)
+        '.r.lp.jn.lz.dhn', // Header vnitřní DIV v email-1
+        'div.r.eya.yss', // Kontejner pro jednotlivé položky v sekcích jako "Garancion", recenze, tlačítkový blok v email-1
+        'div.r.aue.uo8', // Textové bloky / Video bloky v email-1 (alternativa k table)
+        'table.r.aue.uo8', // Textové bloky / Video bloky v email-1
+        'div.p', // Obalující DIV pro hero image v email-1, nebo jiné single-content sekce
 
         // Selektory pro email-2 (Oblíbené vozy) - Stripo/podobné
-        'table.es-button',
-        'td[background*="Banner.png"]',
-        // 'td.es-m-p25r.es-m-p25l', // Tento byl příliš obecný, raději cílíme na konkrétnější bloky
+        'table.es-button', // Specificky pro es-button tabulky
+        'td[background*="Banner.png"]', // Část headeru s bannerem v email-2
+        'td.es-m-p25r.es-m-p25l', // Cílí na TD s paddingem, která obaluje tabulku s obsahem
 
         // Obecnější kontejnery (pokud specifičtější výše nesedí)
-        'div.w',
+        'div.w', // Obecný kontejner pro sekce (např. "Garancion", "Vlerësimet" v email-1)
         'table.es-header-body',
-        'table.es-content-body', // Tento je často LCB pro celé sekce, proto je níže
+        'table.es-content-body',
         'table.es-footer-body',
         'table.es-header-body[bgcolor="#EDF1F8"]',
 
         // OBECNÉ A FALLBACK SELEKTORY (NIŽŠÍ PRIORITA)
         'table[class*="es-adaptive"]',
-        'td > table[role="presentation"][style*="width:"][style*="px"]',
-        'body > table > tbody > tr > td > table[role="presentation"]',
-        'div > table[role="presentation"]',
-        'table[role="presentation"]',
+        // Selektor 'td > table[role="presentation"]' je hodně obecný, posuneme ho níže nebo zvážíme jeho specificitu
+        'td > table[role="presentation"][style*="width:"][style*="px"]', // Upřesnění: tabulka s pevnou šířkou uvnitř TD
+        'body > table > tbody > tr > td > table[role="presentation"]', // Tabulka hlouběji vnořená
+        'div > table[role="presentation"]', // Tento byl v logu, ponecháme ho, ale s nižší prioritou
+        'table[role="presentation"]', // Nejobecnější fallback pro tabulky
       ];
 
       const STYLES_TO_TRACK = [
@@ -658,28 +648,7 @@
       }
 
       function standardizeComponent(sourceElementFromIframe, isComponentMode) {
-        const identifiedLcbOriginalElement = findLogicalComponentBlock(sourceElementFromIframe);
-
-        let componentBoundary = identifiedLcbOriginalElement;
-        const parentCell = identifiedLcbOriginalElement.parentElement;
-
-        // Zkontrolujeme, zda LCB není jeden z našich specificky cílených sloupců,
-        // pro které nechceme rozšiřovat hranici na rodičovskou TD.
-        const isSingleColumnComponent = LOGICAL_BLOCK_SELECTORS.slice(0, 6).some(selector => {
-            try {
-                return identifiedLcbOriginalElement.matches(selector);
-            } catch (e) { return false; }
-        });
-
-        if (!isSingleColumnComponent && parentCell && parentCell.tagName === 'TD' && parentCell.closest('table.es-header-body, table.es-content-body, table.es-footer-body')) {
-          logMessage('i LCB je uvnitř hlavní struktury emailu a není specifický sloupec. Rozšiřuji hranice komponenty na rodičovskou buňku TD, aby se zachoval kontext (padding atd.).');
-          componentBoundary = parentCell;
-        } else if (isSingleColumnComponent) {
-          logMessage('i LCB je specifický sloupec. Hranice komponenty nebude rozšířena na rodičovskou TD.');
-        }
-        else {
-          logMessage('i Komponenta je na nejvyšší úrovni (LCB = hranice komponenty) nebo se nerozšiřuje.');
-        }
+        const componentBoundary = findLogicalComponentBlock(sourceElementFromIframe);
 
         let lcbClone = componentBoundary.cloneNode(true);
 
@@ -691,7 +660,6 @@
         });
 
         if (isComponentMode) {
-          let isFixedWidthComponent = false;
           let componentOriginalWidth = null;
 
           if (lcbClone.style && lcbClone.style.width && lcbClone.style.width.endsWith('px')) {
@@ -701,13 +669,18 @@
           }
 
           if (componentOriginalWidth) {
-            isFixedWidthComponent = true;
             logMessage(`- Detekována pevná šířka komponenty (${componentOriginalWidth}). Nastavuji max-width pro responzivitu.`);
             lcbClone.style.maxWidth = componentOriginalWidth;
             if (!lcbClone.style.width) lcbClone.style.width = componentOriginalWidth; // Zajistit i inline styl
           } else {
-            logMessage('- Komponenta nemá pevnou pixelovou šířku. Nastavuji width: 100% pro fluiditu.');
-            lcbClone.style.width = '100%';
+            // Nová, inteligentnější kontrola pro multi-sloupcové layouty
+            if (lcbClone.querySelector('.es-left, .es-right')) {
+              logMessage('- Detekován multi-sloupcový layout (.es-left/.es-right). Ponechávám přirozenou šířku pro zachování vnitřního uspořádání.');
+              // Záměrně neděláme nic, aby se neaplikovalo width: 100%
+            } else {
+              logMessage('- Komponenta nemá pevnou pixelovou šířku a není multi-sloupcová. Nastavuji width: 100% pro fluiditu.');
+              lcbClone.style.width = '100%';
+            }
           }
         }
 
