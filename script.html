@@ -505,37 +505,100 @@
 
       function extractRelevantStyles(lcbElement, sourceDocument) {
         logMessage('Spouštím extrakci relevantních CSS stylů (v4.1)...');
+    logMessage('Spouštím extrakci relevantních CSS stylů (v4.1)...');
+    logMessage(`Zdrojový dokument: ${sourceDocument}, Počet stylesheetů: ${sourceDocument.styleSheets ? sourceDocument.styleSheets.length : 'N/A'}`);
+    if (sourceDocument.styleSheets) {
+        for(let i = 0; i < sourceDocument.styleSheets.length; i++) {
+            try {
+                logMessage(`Stylesheet #${i}: ${sourceDocument.styleSheets[i].href || 'inline'}, Počet pravidel: ${sourceDocument.styleSheets[i].cssRules ? sourceDocument.styleSheets[i].cssRules.length : 'N/A (nelze přistoupit)'}, Přístupný: ${!!sourceDocument.styleSheets[i].cssRules}`);
+            } catch (e) {
+                logMessage(`Stylesheet #${i}: Chyba při přístupu k pravidlům - ${e.message}`);
+            }
+        }
+    }
+
         const usedClassesAndIds = new Set();
         const allElements = [lcbElement, ...lcbElement.querySelectorAll('*')];
+    logMessage(`- Počet prvků v komponentě (včetně kořene) pro analýzu tříd: ${allElements.length}`);
 
         allElements.forEach((el) => {
           if (el.id) {
             usedClassesAndIds.add(`#${el.id}`);
           }
-          if (el.className && typeof el.className === 'string') {
-            el.className.split(/\s+/).forEach((cls) => {
-              if (cls) usedClassesAndIds.add(`.${cls}`);
+      let classNameStr = '';
+      if (typeof el.className === 'string') {
+        classNameStr = el.className;
+      } else if (el.className && typeof el.className.baseVal === 'string') { // Pro SVG
+        classNameStr = el.className.baseVal;
+      }
+      if (classNameStr) {
+        classNameStr.split(/\s+/).forEach((cls) => {
+          if (cls) {
+            usedClassesAndIds.add(`.${cls}`);
+          }
             });
           }
         });
-
         logMessage(`- Nalezeno ${usedClassesAndIds.size} unikátních tříd a ID v komponentě.`);
+    // Log pro kontrolu, co bylo nasbíráno - odkomentovat pro detailní debug:
+    // if (usedClassesAndIds.size > 0) {
+    //    logMessage(`- Nasbírané třídy/ID: ${Array.from(usedClassesAndIds).join(', ')}`);
+    // }
 
-        const relevantCssRules = new Set();
-        const styleSheets = sourceDocument.styleSheets;
+    const relevantCssRules = new Set();
+    const styleSheets = sourceDocument.styleSheets;
 
-        const isSelectorRelevant = (selectorText) => {
-          const individualSelectors = selectorText.split(',').map((s) => s.trim());
-          for (const selector of individualSelectors) {
-            const identifiersInRule = selector.match(/\.[\w-]+|#[\w-]+/g) || [];
-            if (identifiersInRule.some((identifier) => usedClassesAndIds.has(identifier))) {
-              return true;
+    const isSelectorRelevant = (selectorText) => {
+        // Odstranění nepodporovaných pseudo-elementů/tříd pro .matches a .querySelectorAll
+        // Toto je zjednodušené, komplexnější řešení by mohlo být potřeba pro všechny případy.
+        const cleanSelector = selectorText
+            .replace(/::?(before|after|first-line|first-letter|selection|marker|placeholder|backdrop|cue|cue-region|grammar-error|spelling-error)/gi, '')
+            .replace(/:-(moz-|ms-|webkit-)[a-zA-Z-]+/gi, '') // Odstranění vendor-prefixed pseudo-tříd
+            .replace(/:[a-zA-Z0-9-]+(\([^)]*\))?/g, (match, group) => { // Odstraní většinu pseudo-tříd, ale ponechá :not() s jednoduchým selektorem
+                if (match.toLowerCase().startsWith(':not(') && !match.includes(',')) { // Ponechá :not(.class), :not(#id), :not(element)
+                    return match;
+                }
+                if (match.toLowerCase().startsWith(':is(') || match.toLowerCase().startsWith(':where(')) { // Ponechá :is a :where
+                    return match;
+                }
+                return ''; // Odstraní ostatní pseudo-třídy
+            })
+            .trim();
+
+        if (!cleanSelector) { // Pokud po očištění nezůstal žádný selektor
+             // logMessage(`DEBUG: Selektor "${selectorText}" byl po očištění prázdný.`);
+            return false;
+        }
+
+        try {
+            if (lcbElement.matches(cleanSelector)) {
+                // logMessage(`DEBUG: Pravidlo "${selectorText}" (očištěno na "${cleanSelector}") je relevantní, protože odpovídá LCB.`);
+                return true;
             }
-          }
-          return false;
-        };
+            // querySelectorAll na lcbElement by měl fungovat i na nepřipojeném klonu
+            const matchingElements = lcbElement.querySelectorAll(cleanSelector);
+            if (matchingElements.length > 0) {
+                // logMessage(`DEBUG: Pravidlo "${selectorText}" (očištěno na "${cleanSelector}") je relevantní, protože odpovídá ${matchingElements.length} potomkům LCB.`);
+                return true;
+            }
+        } catch (e) {
+            // logMessage(`DEBUG: Chyba při testování selektoru "${selectorText}" (očištěno na "${cleanSelector}"): ${e.message}. Zkouším fallback.`);
+            // Fallback na původní logiku s identifikátory, pokud .matches nebo .querySelectorAll selže
+            const individualSelectorsFallback = selectorText.split(',').map(s => s.trim());
+            for (const selectorFallback of individualSelectorsFallback) {
+                const identifiersInRule = selectorFallback.match(/\.[\w-]+|#[\w-]+/g) || [];
+                if (identifiersInRule.some(identifier => usedClassesAndIds.has(identifier))) {
+                    // logMessage(`DEBUG: Pravidlo "${selectorFallback}" je relevantní (fallback) kvůli shodě identifikátoru.`);
+                    return true;
+                }
+            }
+            return false;
+        }
+        // logMessage(`DEBUG: Pravidlo "${selectorText}" (očištěno na "${cleanSelector}") nebylo shledáno relevantním.`);
+        return false;
+    };
 
-        for (const sheet of styleSheets) {
+    for (const sheet of styleSheets) {
           try {
             if (!sheet.cssRules) continue;
             for (const rule of sheet.cssRules) {
