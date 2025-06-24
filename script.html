@@ -221,39 +221,40 @@
 
       // --- KONFIGURACE PRO UNIVERZÁLNOST ---
       const LOGICAL_BLOCK_SELECTORS = [
-        // Selektory pro hlavní části emailu (Stripo/podobné frameworky)
-        'table.es-header-body',
-        'table.es-footer-body',
-        'table.es-header-body[bgcolor="#EDF1F8"]', // Specifický odhlašovací blok z email-2
+        // NOVÉ A SPECIFIČTĚJŠÍ SELEKTORY PRO TLAČÍTKA A MALÉ BLOKY
+        // Cílí na vnitřní tabulku tlačítka, která definuje jeho rozměry
+        'table[role="presentation"][style*="separate"][style*="width:"][style*="px"]', // např. <table role="presentation" style="border-collapse: separate; width: 250px;">
+        'td > table[role="presentation"][style*="width:"][style*="px"]', // Tabulka s pevnou šířkou uvnitř TD
+        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"] > span', // Pokud by se kliklo přímo na span uvnitř odkazu tlačítka
+        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"]',    // Samotný odkaz tlačítka
 
         // Selektory z email-1 (Carvago) - seřazeno od specifičtějších
-        '.r.lp.jn.lz.dhn', // Header vnitřní DIV v email-1
         'div.n.y', // Kontejner pro tlačítko v email-1 (např. "Shikoni gamën e veturave")
+        '.r.lp.jn.lz.dhn', // Header vnitřní DIV v email-1
         'div.r.eya.yss', // Kontejner pro jednotlivé položky v sekcích jako "Garancion", recenze, tlačítkový blok v email-1
         'div.r.aue.uo8',   // Textové bloky / Video bloky v email-1 (alternativa k table)
         'table.r.aue.uo8', // Textové bloky / Video bloky v email-1
         'div.p', // Obalující DIV pro hero image v email-1, nebo jiné single-content sekce
-        // 'div.p > table > tbody > tr > td > .m.y', // Původní, možná příliš specifický
 
-        // Selektory pro email-2 (Oblíbené vozy)
+        // Selektory pro email-2 (Oblíbené vozy) - Stripo/podobné
+        'table.es-button', // Specificky pro es-button tabulky
         'td[background*="Banner.png"]', // Část headeru s bannerem v email-2
-        // Cílí na TD s paddingem, která obaluje tabulku s obsahem (produktové karty, textové bloky).
-        'td.es-m-p25r.es-m-p25l',
+        'td.es-m-p25r.es-m-p25l', // Cílí na TD s paddingem, která obaluje tabulku s obsahem
 
         // Obecnější kontejnery (pokud specifičtější výše nesedí)
         'div.w', // Obecný kontejner pro sekce (např. "Garancion", "Vlerësimet" v email-1)
+        'table.es-header-body',
+        'table.es-content-body',
+        'table.es-footer-body',
+        'table.es-header-body[bgcolor="#EDF1F8"]',
 
-        // Selektory pro řádky v tabulkách, které mohou představovat komponentu
-        // 'td.es-m-p25r.es-m-p25l > table > tbody > tr', // Pro produktové karty v email-2, pokud by td.es-m-p25r... bylo moc.
-
-        // Hlavní "tělo" obsahu, pokud nic specifičtějšího
-         'table.es-content-body', // Ponecháno jako fallback.
-
-        // Další obecné selektory
+        // OBECNÉ A FALLBACK SELEKTORY (NIŽŠÍ PRIORITA)
         'table[class*="es-adaptive"]',
-        'div > table[role="presentation"]',
-        'body > table > tbody > tr > td > table[role="presentation"]'
-        // 'body > table > tbody > tr > td > table[width="100%"]', // Velmi obecné
+        'td > table[role="presentation"]', // Obecná tabulka v TD, méně specifická než ty s pevnou šířkou
+        'body > table > tbody > tr > td > table[role="presentation"]',
+        // Poslední záchrana - jakákoliv tabulka s role="presentation", pokud nic jiného nesedí
+        // 'div > table[role="presentation"]', // Tento byl problematický, nahrazen obecnějším table[role="presentation"]
+        'table[role="presentation"]'
       ];
 
       const STYLES_TO_TRACK = ['background-color', 'color', 'font-family', 'font-size', 'font-weight', 'line-height', 'text-align', 'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'];
@@ -585,87 +586,142 @@
     // }
 
     const relevantCssRules = new Set();
-    const styleSheets = sourceDocument.styleSheets;
+    const styleElements = sourceDocument.querySelectorAll('style'); // Získat všechny <style> tagy
 
-    const isSelectorRelevant = (selectorText) => {
-        // Odstranění nepodporovaných pseudo-elementů/tříd pro .matches a .querySelectorAll
-        // Toto je zjednodušené, komplexnější řešení by mohlo být potřeba pro všechny případy.
+    logMessage(`- Nalezeno ${styleElements.length} <style> elementů v dokumentu.`);
+
+    const isSelectorRelevant = (selectorText, elementToCheck, componentRootElement) => {
         const cleanSelector = selectorText
             .replace(/::?(before|after|first-line|first-letter|selection|marker|placeholder|backdrop|cue|cue-region|grammar-error|spelling-error)/gi, '')
-            .replace(/:-(moz-|ms-|webkit-)[a-zA-Z-]+/gi, '') // Odstranění vendor-prefixed pseudo-tříd
-            .replace(/:[a-zA-Z0-9-]+(\([^)]*\))?/g, (match, group) => { // Odstraní většinu pseudo-tříd, ale ponechá :not() s jednoduchým selektorem
-                if (match.toLowerCase().startsWith(':not(') && !match.includes(',')) { // Ponechá :not(.class), :not(#id), :not(element)
-                    return match;
-                }
-                if (match.toLowerCase().startsWith(':is(') || match.toLowerCase().startsWith(':where(')) { // Ponechá :is a :where
-                    return match;
-                }
-                return ''; // Odstraní ostatní pseudo-třídy
+            .replace(/:-(moz-|ms-|webkit-)[a-zA-Z-]+/gi, '')
+            .replace(/:[a-zA-Z0-9-]+(\([^)]*\))?/g, (match) => {
+                if (match.toLowerCase().startsWith(':not(') && !match.includes(',')) return match;
+                if (match.toLowerCase().startsWith(':is(') || match.toLowerCase().startsWith(':where(')) return match;
+                return '';
             })
             .trim();
 
-        if (!cleanSelector) { // Pokud po očištění nezůstal žádný selektor
-             // logMessage(`DEBUG: Selektor "${selectorText}" byl po očištění prázdný.`);
-            return false;
-        }
+        if (!cleanSelector) return false;
 
         try {
-            if (lcbElement.matches(cleanSelector)) {
-                // logMessage(`DEBUG: Pravidlo "${selectorText}" (očištěno na "${cleanSelector}") je relevantní, protože odpovídá LCB.`);
-                return true;
-            }
-            // querySelectorAll na lcbElement by měl fungovat i na nepřipojeném klonu
-            const matchingElements = lcbElement.querySelectorAll(cleanSelector);
-            if (matchingElements.length > 0) {
-                // logMessage(`DEBUG: Pravidlo "${selectorText}" (očištěno na "${cleanSelector}") je relevantní, protože odpovídá ${matchingElements.length} potomkům LCB.`);
-                return true;
-            }
+            // Zkontrolujeme, zda selektor odpovídá samotnému kořenovému prvku komponenty
+            if (componentRootElement.matches(cleanSelector)) return true;
+            // Nebo zda odpovídá některému z potomků komponenty
+            if (componentRootElement.querySelector(cleanSelector)) return true;
         } catch (e) {
-            // logMessage(`DEBUG: Chyba při testování selektoru "${selectorText}" (očištěno na "${cleanSelector}"): ${e.message}. Zkouším fallback.`);
-            // Fallback na původní logiku s identifikátory, pokud .matches nebo .querySelectorAll selže
-            const individualSelectorsFallback = selectorText.split(',').map(s => s.trim());
-            for (const selectorFallback of individualSelectorsFallback) {
-                const identifiersInRule = selectorFallback.match(/\.[\w-]+|#[\w-]+/g) || [];
-                if (identifiersInRule.some(identifier => usedClassesAndIds.has(identifier))) {
-                    // logMessage(`DEBUG: Pravidlo "${selectorFallback}" je relevantní (fallback) kvůli shodě identifikátoru.`);
-                    return true;
-                }
+            // Fallback pro složitější selektory, které .matches nebo .querySelectorAll nezvládne dobře
+            const identifiersInRule = selectorText.match(/\.[\w-]+|#[\w-]+/g) || [];
+            if (identifiersInRule.some(identifier => {
+              // Zkontrolujeme, zda prvek nebo jeho rodiče mají danou třídu/ID,
+              // a zároveň zda je tento prvek součástí komponenty.
+              let current = elementToCheck;
+              while(current && current !== sourceDocument.body && current !== componentRootElement.parentElement) {
+                if (current.matches(identifier) && componentRootElement.contains(current)) return true;
+                current = current.parentElement;
+              }
+              return false;
+            })) {
+              return true;
             }
-            return false;
+            // logMessage(`! Chyba nebo irelevantní selektor: "${selectorText}" (očištěno na "${cleanSelector}"). Chyba: ${e.message}`);
         }
-        // logMessage(`DEBUG: Pravidlo "${selectorText}" (očištěno na "${cleanSelector}") nebylo shledáno relevantním.`);
         return false;
     };
 
-    for (const sheet of styleSheets) {
-          try {
-            if (!sheet.cssRules) continue;
-            for (const rule of sheet.cssRules) {
-              if (rule instanceof CSSStyleRule) {
-                if (isSelectorRelevant(rule.selectorText)) {
-                  relevantCssRules.add(rule.cssText);
+    styleElements.forEach((styleElement, styleIndex) => {
+        logMessage(`- Zpracovávám <style> element #${styleIndex + 1}`);
+        try {
+            const sheet = styleElement.sheet;
+            if (!sheet || !sheet.cssRules) {
+                 // Pokus o ruční parsování, pokud sheet.cssRules není dostupné (např. kvůli umístění v body)
+                logMessage(`  ! CSSStyleSheet.cssRules není dostupné pro <style> #${styleIndex + 1}. Zkouším ruční parsování.`);
+                const tempDiv = document.createElement('div');
+                const tempStyle = document.createElement('style');
+                tempStyle.textContent = styleElement.innerHTML;
+                tempDiv.appendChild(tempStyle); // Přidání do DOM (dočasně) je někdy nutné pro aktivaci .sheet
+                document.body.appendChild(tempDiv); // Dočasné připojení k hlavnímu dokumentu nástroje
+
+                const tempSheet = tempStyle.sheet;
+                if (tempSheet && tempSheet.cssRules) {
+                    logMessage(`  ✔ Ruční parsování úspěšné. Počet pravidel: ${tempSheet.cssRules.length}`);
+                    processRules(tempSheet.cssRules, lcbElement);
+                } else {
+                    logMessage(`  ‼ Ruční parsování selhalo pro <style> #${styleIndex + 1}. Obsah: ${styleElement.innerHTML.substring(0,100)}...`);
                 }
-              } else if (rule instanceof CSSMediaRule) {
+                document.body.removeChild(tempDiv); // Odstranění dočasného elementu
+                return;
+            }
+            processRules(sheet.cssRules, lcbElement);
+
+        } catch (e) {
+            logMessage(`! Chyba při čtení stylů z <style> elementu #${styleIndex + 1} (pravděpodobně bezpečnostní omezení nebo chyba parsování): ${e.message}`);
+            logMessage(`  Obsah <style> bloku: ${styleElement.innerHTML.substring(0, 200)}...`);
+        }
+    });
+
+    function processRules(rules, componentRootElement) {
+        for (const rule of rules) {
+            if (rule instanceof CSSStyleRule) {
+                // Pro CSSStyleRule testujeme každý prvek v komponentě
+                let ruleAdded = false;
+                for (const elInComponent of allElements) {
+                    if (isSelectorRelevant(rule.selectorText, elInComponent, componentRootElement)) {
+                        relevantCssRules.add(rule.cssText);
+                        ruleAdded = true;
+                        break;
+                    }
+                }
+                // if(!ruleAdded) logMessage(`  DEBUG: Pravidlo "${rule.selectorText}" nebylo relevantní pro žádný prvek komponenty.`);
+
+            } else if (rule instanceof CSSMediaRule) {
                 let relevantMediaStyles = '';
                 for (const innerRule of rule.cssRules) {
-                  if (innerRule instanceof CSSStyleRule && isSelectorRelevant(innerRule.selectorText)) {
-                    relevantMediaStyles += `\n  ${innerRule.cssText}`;
-                  }
+                    if (innerRule instanceof CSSStyleRule) {
+                        for (const elInComponent of allElements) {
+                             if (isSelectorRelevant(innerRule.selectorText, elInComponent, componentRootElement)) {
+                                relevantMediaStyles += `\n  ${innerRule.cssText}`;
+                                break;
+                            }
+                        }
+                    }
                 }
                 if (relevantMediaStyles) {
-                  relevantCssRules.add(`@media ${rule.conditionText} {${relevantMediaStyles}\n}`);
+                    relevantCssRules.add(`@media ${rule.conditionText} {${relevantMediaStyles}\n}`);
                 }
-              }
             }
-          } catch (e) {
-            logMessage(`! Chyba při čtení stylů (pravděpodobně CORS nebo bezpečnostní omezení): ${e.message}`);
-          }
+            // TODO: Zvážit podporu pro CSSImportRule, CSSSupportsRule atd. pokud by bylo potřeba.
         }
-        logMessage(`✔ Extrahováno ${relevantCssRules.size} relevantních CSS pravidel.`);
-        return Array.from(relevantCssRules).join('\n');
-      }
+    }
 
-      function standardizeComponent(sourceElementFromIframe, isComponentMode) {
+    // Přidání inline stylů (jako fallback nebo doplnění, pokud by třídy nebyly dostatečné)
+    // Toto je teoreticky již pokryto klonováním, ale pro jistotu:
+    allElements.forEach(el => {
+        if (el.style && el.style.cssText) {
+            // Vytvoření unikátního selektoru pro element, pokud nemá ID
+            let selector;
+            if (el.id) {
+                selector = `#${el.id}`;
+            } else {
+                // Generování dočasného unikátního atributu pro selektor, pokud element nemá ID.
+                // Toto je komplexní a může být nespolehlivé.
+                // Prozatím se spoléháme na to, že cloneNode(true) zachová inline styly
+                // a extrakce se soustředí na styly z <style> bloků.
+                // Pokud by bylo nutné explicitně extrahovat inline styly do <style> bloku,
+                // vyžadovalo by to robustní generování selektorů.
+            }
+            // Příklad (velmi zjednodušený, nedoporučuje se pro produkci bez důkladného testování):
+            // if (selector) {
+            // relevantCssRules.add(`${selector} { ${el.style.cssText} }`);
+            // }
+        }
+    });
+
+
+    logMessage(`✔ Extrahováno ${relevantCssRules.size} relevantních CSS pravidel z <style> bloků.`);
+    return Array.from(relevantCssRules).join('\n');
+}
+
+function standardizeComponent(sourceElementFromIframe, isComponentMode) {
         const identifiedLcbOriginalElement = findLogicalComponentBlock(sourceElementFromIframe);
 
         // --- OPRAVENÁ LOGIKA v4.3 ---
@@ -691,36 +747,56 @@
 
         // Úprava pevné šířky pro responzivitu v komponentním režimu
         if (isComponentMode) {
+            let isFixedWidthComponent = false;
+            let fixedWidthValue = '';
+
             if (lcbClone.style && lcbClone.style.width && lcbClone.style.width.endsWith('px')) {
                 const originalWidth = lcbClone.style.width;
                 logMessage(`- Detekována pevná inline šířka (${originalWidth}) na kořenovém elementu komponenty.`);
-                let hasMaxWidthClass = false;
-                const maxWidthClasses = ['es-header-body', 'es-content-body', 'es-footer-body'];
-                if (lcbClone.classList) {
-                    for (const cls of maxWidthClasses) {
-                        if (lcbClone.classList.contains(cls)) {
-                            hasMaxWidthClass = true;
-                            break;
-                        }
-                    }
-                }
+                isFixedWidthComponent = true;
+                // Původní inline width se ponechá, pouze se doplní max-width
+                lcbClone.style.maxWidth = originalWidth;
+                logMessage(`- Ponechávám inline width: ${originalWidth} a nastavuji max-width: ${originalWidth}.`);
 
-                if (hasMaxWidthClass) {
-                    logMessage(`- Kořenový element má třídu (${Array.from(lcbClone.classList).join(', ')}) naznačující vlastní max-width. Odstraňuji inline width: ${originalWidth}.`);
-                    lcbClone.style.width = '';
-                } else {
-                    logMessage(`- Nahrazuji inline width: ${originalWidth} za width: 100%; max-width: ${originalWidth}.`);
-                    lcbClone.style.width = '100%';
-                    lcbClone.style.maxWidth = originalWidth;
-                }
             } else if (lcbClone.getAttribute('width') && !lcbClone.tagName.toLowerCase().match(/^(img|iframe|embed|object|video)$/)) {
                 const originalWidthAttr = lcbClone.getAttribute('width');
-                if (/^\\d+(px)?$/.test(originalWidthAttr)) {
-                     const widthVal = originalWidthAttr.endsWith('px') ? originalWidthAttr : originalWidthAttr + 'px';
-                     logMessage(`- Detekován atribut width=\"${originalWidthAttr}\" na kořenovém elementu. Nahrazuji za width=\"100%\" a style.maxWidth=\"${widthVal}\".`);
-                     lcbClone.setAttribute('width', '100%');
+                // Regulární výraz pro kontrolu, zda je hodnota atributu width číslo nebo číslo následované "px"
+                if (/^\\d+(px)?$/.test(originalWidthAttr.trim())) {
+                     const widthVal = originalWidthAttr.trim().endsWith('px') ? originalWidthAttr.trim() : originalWidthAttr.trim() + 'px';
+                     logMessage(`- Detekován atribut width=\"${originalWidthAttr}\" na kořenovém elementu.`);
+                     isFixedWidthComponent = true;
+                     // Původní atribut width se ponechá, pouze se doplní max-width
                      lcbClone.style.maxWidth = widthVal;
+                     // Pokud je atribut width nastaven bez 'px', a je to číslo, tak pro jistotu styl width také nastavíme s 'px'
+                     // aby nedošlo ke konfliktu mezi atributem "250" a style.width=""
+                     if (/^\\d+$/.test(originalWidthAttr.trim()) && lcbClone.style) {
+                        lcbClone.style.width = widthVal;
+                        logMessage(`- Doplňuji style.width=\"${widthVal}\" pro konzistenci s atributem width.`);
+                     }
+                     logMessage(`- Ponechávám atribut width=\"${originalWidthAttr}\" (nebo upravený style.width) a nastavuji style.maxWidth=\"${widthVal}\".`);
+                } else {
+                    logMessage(`- Atribut width=\"${originalWidthAttr}\" na kořenovém elementu není pevná pixelová hodnota. Ponechávám beze změny atributu, zvažuji nastavení width: 100%.`);
+                    // Pro ne-pixelové hodnoty (např. "100%") můžeme zvážit nastavení style.width = '100%'
+                    // pokud chceme, aby se komponenta roztáhla.
+                    // Prozatím, pokud to není explicitní pixelová šířka, necháme atribut tak jak je,
+                    // a pokud nemá ani inline styl width, tak se může aplikovat width:100% níže.
+                     if (!lcbClone.style.width) { // Pokud nemá ani inline styl width
+                        logMessage(`- Kořenový element nemá inline styl width. Nastavuji width: 100% pro fluiditu.`);
+                        lcbClone.style.width = '100%';
+                     }
                 }
+            }
+
+            // Pokud komponenta NENÍ explicitně pevně široká (v px) a nemá nastavený inline styl width,
+            // nastavíme jí width: 100% pro fluidní chování v rámci wrapperu.
+            // Toto je důležité pro bloky, které mají být full-width.
+            if (!isFixedWidthComponent && lcbClone.style && !lcbClone.style.width) {
+                logMessage('- Kořenový element komponenty nemá detekovanou pevnou pixelovou šířku ani inline styl width. Nastavuji width: 100% pro fluiditu.');
+                lcbClone.style.width = '100%';
+            } else if (isFixedWidthComponent) {
+                 logMessage('- Kořenový element má pevnou šířku. Nebude nastavena na 100%.');
+            } else if (lcbClone.style && lcbClone.style.width) {
+                 logMessage(`- Kořenový element má již inline styl width: ${lcbClone.style.width}. Ponechávám.`);
             }
         }
 
