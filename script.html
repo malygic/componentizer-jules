@@ -175,6 +175,7 @@
         </div>
 
         <button id="copyButton">Kopírovat kód</button>
+        <button id="copyLogsBtn" style="margin-left: 10px;">Kopírovat logy</button>
 
         <details id="styleEditorPanel" style="display: none">
           <summary>Styly a Úpravy</summary>
@@ -212,6 +213,7 @@
       const styleEditorPanel = document.getElementById('styleEditorPanel');
       const styleInputsContainer = document.getElementById('styleInputsContainer');
       const applyStylesBtn = document.getElementById('applyStylesBtn');
+      const copyLogsBtn = document.getElementById('copyLogsBtn'); // Nová reference
 
       let masterNew2FullHtml = '';
       let selectedElement = null;
@@ -274,7 +276,20 @@
         selectParentBtn.addEventListener('click', handleSelectParent);
         selectChildBtn.addEventListener('click', handleSelectChild);
         copyButton.addEventListener('click', handleCopy);
+        if (copyLogsBtn) copyLogsBtn.addEventListener('click', handleCopyLogs); // Nový listener
         applyStylesBtn.addEventListener('click', handleApplyStyles);
+      }
+
+      function handleCopyLogs() { // Nová funkce
+        if (!logOutputTextarea) return;
+        navigator.clipboard.writeText(logOutputTextarea.value)
+            .then(() => {
+                alert('Logy zkopírovány do schránky!');
+            })
+            .catch(err => {
+                console.error('Chyba při kopírování logů:', err);
+                alert('Chyba při kopírování logů.');
+            });
       }
 
       function logMessage(message) {
@@ -295,15 +310,39 @@
             const previewDoc = emailPreview.contentWindow.document;
             previewDoc.open();
             previewDoc.write(emailContent);
-            previewDoc.close();
+            previewDoc.close(); // Zavření dokumentu spustí jeho parsování a načítání zdrojů
             resetUIState();
-            logMessage(`Soubor načten: ${file.name}`);
-            setTimeout(() => {
-              const previewBody = previewDoc.body;
-              if (!previewBody.hasAttribute('data-cline-listeners-attached')) {
-                addPreviewListeners(previewBody);
-              }
-            }, 500);
+            logMessage(`Soubor načten: ${file.name}. Čekám na plné načtení iframe (emailPreview)...`);
+
+            // Odstraníme případný starý listener, abychom předešli vícenásobným registracím
+            // a zajistili, že se 'load' vztahuje k aktuálnímu obsahu.
+            if (emailPreview.handleIframeLoad) {
+                emailPreview.removeEventListener('load', emailPreview.handleIframeLoad);
+            }
+
+            emailPreview.handleIframeLoad = () => {
+                logMessage('Iframe (emailPreview) plně načten - event "load" spuštěn.');
+                // Je důležité získat aktuální document a body z contentWindow po načtení
+                const currentPreviewDoc = emailPreview.contentWindow.document;
+                const previewBody = currentPreviewDoc.body;
+
+                if (previewBody) {
+                    if (!previewBody.hasAttribute('data-cline-listeners-attached')) {
+                        addPreviewListeners(previewBody);
+                        logMessage('Event listenery pro náhled (klik, hover) byly přidány.');
+                    } else {
+                        logMessage('Event listenery pro náhled již byly dříve přidány (nepřidávám znovu).');
+                    }
+                } else {
+                    logMessage('CHYBA: previewDoc.body není k dispozici ani po "load" události iframe.');
+                }
+                // Odstranění listeneru po jeho vykonání, aby se nespouštěl vícekrát pro stejné načtení.
+                // emailPreview.removeEventListener('load', emailPreview.handleIframeLoad); // Nahrazeno { once: true }
+            };
+
+            // Přidání listeneru s { once: true } zajistí, že se spustí jen jednou pro toto načtení
+            // a pak se automaticky odstraní.
+            emailPreview.addEventListener('load', emailPreview.handleIframeLoad, { once: true });
           };
           reader.readAsText(file);
         }
@@ -649,6 +688,41 @@
           el.removeAttribute('data-cline-selected');
           if (el.style) el.style.outline = '';
         });
+
+        // Úprava pevné šířky pro responzivitu v komponentním režimu
+        if (isComponentMode) {
+            if (lcbClone.style && lcbClone.style.width && lcbClone.style.width.endsWith('px')) {
+                const originalWidth = lcbClone.style.width;
+                logMessage(`- Detekována pevná inline šířka (${originalWidth}) na kořenovém elementu komponenty.`);
+                let hasMaxWidthClass = false;
+                const maxWidthClasses = ['es-header-body', 'es-content-body', 'es-footer-body'];
+                if (lcbClone.classList) {
+                    for (const cls of maxWidthClasses) {
+                        if (lcbClone.classList.contains(cls)) {
+                            hasMaxWidthClass = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasMaxWidthClass) {
+                    logMessage(`- Kořenový element má třídu (${Array.from(lcbClone.classList).join(', ')}) naznačující vlastní max-width. Odstraňuji inline width: ${originalWidth}.`);
+                    lcbClone.style.width = '';
+                } else {
+                    logMessage(`- Nahrazuji inline width: ${originalWidth} za width: 100%; max-width: ${originalWidth}.`);
+                    lcbClone.style.width = '100%';
+                    lcbClone.style.maxWidth = originalWidth;
+                }
+            } else if (lcbClone.getAttribute('width') && !lcbClone.tagName.toLowerCase().match(/^(img|iframe|embed|object|video)$/)) {
+                const originalWidthAttr = lcbClone.getAttribute('width');
+                if (/^\\d+(px)?$/.test(originalWidthAttr)) {
+                     const widthVal = originalWidthAttr.endsWith('px') ? originalWidthAttr : originalWidthAttr + 'px';
+                     logMessage(`- Detekován atribut width=\"${originalWidthAttr}\" na kořenovém elementu. Nahrazuji za width=\"100%\" a style.maxWidth=\"${widthVal}\".`);
+                     lcbClone.setAttribute('width', '100%');
+                     lcbClone.style.maxWidth = widthVal;
+                }
+            }
+        }
 
         // Spustíme transformaci DIV->TABLE, pokud je potřeba (uvnitř klonu)
         const problematicDivContainer = lcbClone.querySelector('.m.y.wa');
