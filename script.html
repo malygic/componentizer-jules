@@ -219,19 +219,42 @@
 
       // --- KONFIGURACE PRO UNIVERZÁLNOST ---
       const LOGICAL_BLOCK_SELECTORS = [
+        // Selektory pro hlavní části emailu (Stripo/podobné frameworky)
         'table.es-header-body',
-        'table.es-content-body',
         'table.es-footer-body',
-        'div.w',
-        '.r.lp.jn.lz.dhn',
-        'table.r.aue.uo8',
-        'div.r.aue.uo8',
-        'div.p > table > tbody > tr > td > .m.y',
+        'table.es-header-body[bgcolor="#EDF1F8"]', // Specifický odhlašovací blok z email-2
+
+        // Selektory z email-1 (Carvago) - seřazeno od specifičtějších
+        '.r.lp.jn.lz.dhn', // Header vnitřní DIV v email-1
+        'div.n.y', // Kontejner pro tlačítko v email-1 (např. "Shikoni gamën e veturave")
+        'div.r.eya.yss', // Kontejner pro jednotlivé položky v sekcích jako "Garancion", recenze, tlačítkový blok v email-1
+        'div.r.aue.uo8',   // Textové bloky / Video bloky v email-1 (alternativa k table)
+        'table.r.aue.uo8', // Textové bloky / Video bloky v email-1
+        'div.p', // Obalující DIV pro hero image v email-1, nebo jiné single-content sekce
+        // 'div.p > table > tbody > tr > td > .m.y', // Původní, možná příliš specifický
+
+        // Selektory pro email-2 (Oblíbené vozy)
+        'td[background*="Banner.png"]', // Část headeru s bannerem v email-2
+        // Cílí na TD s paddingem, která obaluje tabulku s obsahem (produktové karty, textové bloky).
+        'td.es-m-p25r.es-m-p25l',
+
+        // Obecnější kontejnery (pokud specifičtější výše nesedí)
+        'div.w', // Obecný kontejner pro sekce (např. "Garancion", "Vlerësimet" v email-1)
+
+        // Selektory pro řádky v tabulkách, které mohou představovat komponentu
+        // 'td.es-m-p25r.es-m-p25l > table > tbody > tr', // Pro produktové karty v email-2, pokud by td.es-m-p25r... bylo moc.
+
+        // Hlavní "tělo" obsahu, pokud nic specifičtějšího
+         'table.es-content-body', // Ponecháno jako fallback.
+
+        // Další obecné selektory
         'table[class*="es-adaptive"]',
-        'body > table > tbody > tr > td > table[width="100%"]',
+        'div > table[role="presentation"]',
+        'body > table > tbody > tr > td > table[role="presentation"]'
+        // 'body > table > tbody > tr > td > table[width="100%"]', // Velmi obecné
       ];
 
-      const STYLES_TO_TRACK = ['background-color', 'color', 'font-family', 'font-size', 'font-weight', 'line-height', 'text-align'];
+      const STYLES_TO_TRACK = ['background-color', 'color', 'font-family', 'font-size', 'font-weight', 'line-height', 'text-align', 'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'];
 
       // --- INICIALIZACE A LISTENERY ---
       function initializeApp() {
