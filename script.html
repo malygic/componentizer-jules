@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Univerzální Nástroj pro Komponentizaci HTML Emailů v4.3</title>
+    <title>Univerzální Nástroj pro Komponentizaci HTML Emailů v4.4 (Doporučená verze)</title>
     <style>
       body {
         font-family: sans-serif;
@@ -129,7 +129,7 @@
     </style>
   </head>
   <body>
-    <h1>Univerzální Nástroj pro Komponentizaci HTML Emailů v4.3</h1>
+    <h1>Univerzální Nástroj pro Komponentizaci HTML Emailů v4.4 (Doporučená verze)</h1>
 
     <div class="controls">
       <input type="file" id="htmlFileInput" accept=".html,.htm" />
@@ -175,7 +175,7 @@
         </div>
 
         <button id="copyButton">Kopírovat kód</button>
-        <button id="copyLogsBtn" style="margin-left: 10px;">Kopírovat logy</button>
+        <button id="copyLogsBtn" style="margin-left: 10px">Kopírovat logy</button>
 
         <details id="styleEditorPanel" style="display: none">
           <summary>Styly a Úpravy</summary>
@@ -213,7 +213,7 @@
       const styleEditorPanel = document.getElementById('styleEditorPanel');
       const styleInputsContainer = document.getElementById('styleInputsContainer');
       const applyStylesBtn = document.getElementById('applyStylesBtn');
-      const copyLogsBtn = document.getElementById('copyLogsBtn'); // Nová reference
+      const copyLogsBtn = document.getElementById('copyLogsBtn');
 
       let masterNew2FullHtml = '';
       let selectedElement = null;
@@ -232,14 +232,14 @@
         'table[role="presentation"][style*="width:"][style*="px"]', // Jakákoliv tabulka s role="presentation" a pevnou pixelovou šířkou ve stylu
 
         // Selektory pro odkazy stylizované jako tlačítka
-        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"]',    // Samotný odkaz tlačítka
+        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"]', // Samotný odkaz tlačítka
         'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"] > span', // Pokud by se kliklo přímo na span uvnitř odkazu tlačítka
 
         // Selektory z email-1 (Carvago) - pro větší bloky
         'div.n.y', // Kontejner pro tlačítko v email-1 (pokud by se kliklo na něj)
         '.r.lp.jn.lz.dhn', // Header vnitřní DIV v email-1
         'div.r.eya.yss', // Kontejner pro jednotlivé položky v sekcích jako "Garancion", recenze, tlačítkový blok v email-1
-        'div.r.aue.uo8',   // Textové bloky / Video bloky v email-1 (alternativa k table)
+        'div.r.aue.uo8', // Textové bloky / Video bloky v email-1 (alternativa k table)
         'table.r.aue.uo8', // Textové bloky / Video bloky v email-1
         'div.p', // Obalující DIV pro hero image v email-1, nebo jiné single-content sekce
 
@@ -261,10 +261,23 @@
         'td > table[role="presentation"][style*="width:"][style*="px"]', // Upřesnění: tabulka s pevnou šířkou uvnitř TD
         'body > table > tbody > tr > td > table[role="presentation"]', // Tabulka hlouběji vnořená
         'div > table[role="presentation"]', // Tento byl v logu, ponecháme ho, ale s nižší prioritou
-        'table[role="presentation"]' // Nejobecnější fallback pro tabulky
+        'table[role="presentation"]', // Nejobecnější fallback pro tabulky
       ];
 
-      const STYLES_TO_TRACK = ['background-color', 'color', 'font-family', 'font-size', 'font-weight', 'line-height', 'text-align', 'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'];
+      const STYLES_TO_TRACK = [
+        'background-color',
+        'color',
+        'font-family',
+        'font-size',
+        'font-weight',
+        'line-height',
+        'text-align',
+        'padding',
+        'padding-top',
+        'padding-right',
+        'padding-bottom',
+        'padding-left',
+      ];
 
       // --- INICIALIZACE A LISTENERY ---
       function initializeApp() {
@@ -284,20 +297,21 @@
         selectParentBtn.addEventListener('click', handleSelectParent);
         selectChildBtn.addEventListener('click', handleSelectChild);
         copyButton.addEventListener('click', handleCopy);
-        if (copyLogsBtn) copyLogsBtn.addEventListener('click', handleCopyLogs); // Nový listener
+        if (copyLogsBtn) copyLogsBtn.addEventListener('click', handleCopyLogs);
         applyStylesBtn.addEventListener('click', handleApplyStyles);
       }
 
-      function handleCopyLogs() { // Nová funkce
+      function handleCopyLogs() {
         if (!logOutputTextarea) return;
-        navigator.clipboard.writeText(logOutputTextarea.value)
-            .then(() => {
-                alert('Logy zkopírovány do schránky!');
-            })
-            .catch(err => {
-                console.error('Chyba při kopírování logů:', err);
-                alert('Chyba při kopírování logů.');
-            });
+        navigator.clipboard
+          .writeText(logOutputTextarea.value)
+          .then(() => {
+            alert('Logy zkopírovány do schránky!');
+          })
+          .catch((err) => {
+            console.error('Chyba při kopírování logů:', err);
+            alert('Chyba při kopírování logů.');
+          });
       }
 
       function logMessage(message) {
@@ -318,38 +332,31 @@
             const previewDoc = emailPreview.contentWindow.document;
             previewDoc.open();
             previewDoc.write(emailContent);
-            previewDoc.close(); // Zavření dokumentu spustí jeho parsování a načítání zdrojů
+            previewDoc.close();
             resetUIState();
             logMessage(`Soubor načten: ${file.name}. Čekám na plné načtení iframe (emailPreview)...`);
 
-            // Odstraníme případný starý listener, abychom předešli vícenásobným registracím
-            // a zajistili, že se 'load' vztahuje k aktuálnímu obsahu.
             if (emailPreview.handleIframeLoad) {
-                emailPreview.removeEventListener('load', emailPreview.handleIframeLoad);
+              emailPreview.removeEventListener('load', emailPreview.handleIframeLoad);
             }
 
             emailPreview.handleIframeLoad = () => {
-                logMessage('Iframe (emailPreview) plně načten - event "load" spuštěn.');
-                // Je důležité získat aktuální document a body z contentWindow po načtení
-                const currentPreviewDoc = emailPreview.contentWindow.document;
-                const previewBody = currentPreviewDoc.body;
+              logMessage('Iframe (emailPreview) plně načten - event "load" spuštěn.');
+              const currentPreviewDoc = emailPreview.contentWindow.document;
+              const previewBody = currentPreviewDoc.body;
 
-                if (previewBody) {
-                    if (!previewBody.hasAttribute('data-cline-listeners-attached')) {
-                        addPreviewListeners(previewBody);
-                        logMessage('Event listenery pro náhled (klik, hover) byly přidány.');
-                    } else {
-                        logMessage('Event listenery pro náhled již byly dříve přidány (nepřidávám znovu).');
-                    }
+              if (previewBody) {
+                if (!previewBody.hasAttribute('data-cline-listeners-attached')) {
+                  addPreviewListeners(previewBody);
+                  logMessage('Event listenery pro náhled (klik, hover) byly přidány.');
                 } else {
-                    logMessage('CHYBA: previewDoc.body není k dispozici ani po "load" události iframe.');
+                  logMessage('Event listenery pro náhled již byly dříve přidány (nepřidávám znovu).');
                 }
-                // Odstranění listeneru po jeho vykonání, aby se nespouštěl vícekrát pro stejné načtení.
-                // emailPreview.removeEventListener('load', emailPreview.handleIframeLoad); // Nahrazeno { once: true }
+              } else {
+                logMessage('CHYBA: previewDoc.body není k dispozici ani po "load" události iframe.');
+              }
             };
 
-            // Přidání listeneru s { once: true } zajistí, že se spustí jen jednou pro toto načtení
-            // a pak se automaticky odstraní.
             emailPreview.addEventListener('load', emailPreview.handleIframeLoad, { once: true });
           };
           reader.readAsText(file);
@@ -492,7 +499,7 @@
 
       function runComponentization() {
         if (!selectedElement) return;
-        logMessage('--- START ZPRACOVÁNÍ v4.3 ---');
+        logMessage('--- START ZPRACOVÁNÍ v4.4 (Doporučená verze) ---');
         logMessage(`Režim komponentizace: ${componentModeCheckbox.checked}`);
         masterNew2FullHtml = masterTemplateInput.value;
         if (!masterNew2FullHtml.trim()) {
@@ -534,7 +541,8 @@
         logMessage(`🔎 Hledám logický blok komponenty (LCB) od <${element.tagName.toLowerCase()} class="${element.className || ''}">...`);
         let current = element;
         let depth = 0;
-        while (current && current.tagName !== 'BODY' && depth < 10) { // Přidán limit hloubky pro bezpečnost
+        while (current && current.tagName !== 'BODY' && depth < 10) {
+          // Přidán limit hloubky pro bezpečnost
           const currentTagName = current.tagName.toLowerCase();
           const currentClassName = current.className || '';
           logMessage(`  Depth ${depth}: Testuji element <${currentTagName} class="${currentClassName}">`);
@@ -550,205 +558,95 @@
             if (matches) {
               logMessage(`    👍 SHODA! <${currentTagName} class="${currentClassName}"> odpovídá selektoru "${selector}". Vracím tento element jako LCB.`);
               return current;
-            } else {
-              // Logovat neshodu pouze pokud je to užitečné (může být velmi verbose)
-              // logMessage(`    -- Neshoda: <${currentTagName}> s selektorem "${selector}"`);
             }
           }
           current = current.parentElement;
           depth++;
         }
         if (depth >= 10) {
-            logMessage(`🛑 Varování: Překročen limit hloubky (10) při hledání LCB. Vracím původně vybraný prvek.`);
+          logMessage(`🛑 Varování: Překročen limit hloubky (10) při hledání LCB. Vracím původně vybraný prvek.`);
         } else if (!current || current.tagName === 'BODY') {
-            logMessage(`ℹ️ Dosáhnuto BODY nebo null elementu při hledání LCB.`);
+          logMessage(`ℹ️ Dosáhnuto BODY nebo null elementu při hledání LCB.`);
         }
         logMessage(`‼ Varování: Nebyl nalezen žádný LCB pomocí definovaných selektorů. Vracím původně vybraný prvek: <${element.tagName.toLowerCase()} class="${element.className || ''}">.`);
         return element;
       }
 
       function extractRelevantStyles(lcbElement, sourceDocument) {
-        logMessage('Spouštím extrakci relevantních CSS stylů (v4.1)...');
-    logMessage('Spouštím extrakci relevantních CSS stylů (v4.1)...');
-    logMessage(`Zdrojový dokument: ${sourceDocument}, Počet stylesheetů: ${sourceDocument.styleSheets ? sourceDocument.styleSheets.length : 'N/A'}`);
-    if (sourceDocument.styleSheets) {
-        for(let i = 0; i < sourceDocument.styleSheets.length; i++) {
-            try {
-                logMessage(`Stylesheet #${i}: ${sourceDocument.styleSheets[i].href || 'inline'}, Počet pravidel: ${sourceDocument.styleSheets[i].cssRules ? sourceDocument.styleSheets[i].cssRules.length : 'N/A (nelze přistoupit)'}, Přístupný: ${!!sourceDocument.styleSheets[i].cssRules}`);
-            } catch (e) {
-                logMessage(`Stylesheet #${i}: Chyba při přístupu k pravidlům - ${e.message}`);
-            }
-        }
-    }
+        logMessage('Spouštím extrakci relevantních CSS stylů (DOM-based)...');
+        logMessage(`- Zdrojový dokument: ${sourceDocument}, Počet stylesheetů: ${sourceDocument.styleSheets ? sourceDocument.styleSheets.length : 'N/A'}`);
 
-        const usedClassesAndIds = new Set();
         const allElements = [lcbElement, ...lcbElement.querySelectorAll('*')];
-    logMessage(`- Počet prvků v komponentě (včetně kořene) pro analýzu tříd: ${allElements.length}`);
+        logMessage(`- Počet prvků v komponentě (včetně kořene) pro analýzu: ${allElements.length}`);
 
-        allElements.forEach((el) => {
-          if (el.id) {
-            usedClassesAndIds.add(`#${el.id}`);
-          }
-      let classNameStr = '';
-      if (typeof el.className === 'string') {
-        classNameStr = el.className;
-      } else if (el.className && typeof el.className.baseVal === 'string') { // Pro SVG
-        classNameStr = el.className.baseVal;
-      }
-      if (classNameStr) {
-        classNameStr.split(/\s+/).forEach((cls) => {
-          if (cls) {
-            usedClassesAndIds.add(`.${cls}`);
-          }
-            });
-          }
-        });
-        logMessage(`- Nalezeno ${usedClassesAndIds.size} unikátních tříd a ID v komponentě.`);
-    // Log pro kontrolu, co bylo nasbíráno - odkomentovat pro detailní debug:
-    // if (usedClassesAndIds.size > 0) {
-    //    logMessage(`- Nasbírané třídy/ID: ${Array.from(usedClassesAndIds).join(', ')}`);
-    // }
+        const relevantCssRules = new Set();
+        const styleElements = sourceDocument.querySelectorAll('style');
 
-    const relevantCssRules = new Set();
-    const styleElements = sourceDocument.querySelectorAll('style'); // Získat všechny <style> tagy
+        logMessage(`- Nalezeno ${styleElements.length} <style> elementů v dokumentu.`);
 
-    logMessage(`- Nalezeno ${styleElements.length} <style> elementů v dokumentu.`);
-
-    const isSelectorRelevant = (selectorText, elementToCheck, componentRootElement) => {
-        const cleanSelector = selectorText
+        const isSelectorRelevant = (selectorText, componentRootElement) => {
+          const cleanSelector = selectorText
             .replace(/::?(before|after|first-line|first-letter|selection|marker|placeholder|backdrop|cue|cue-region|grammar-error|spelling-error)/gi, '')
             .replace(/:-(moz-|ms-|webkit-)[a-zA-Z-]+/gi, '')
             .replace(/:[a-zA-Z0-9-]+(\([^)]*\))?/g, (match) => {
-                if (match.toLowerCase().startsWith(':not(') && !match.includes(',')) return match;
-                if (match.toLowerCase().startsWith(':is(') || match.toLowerCase().startsWith(':where(')) return match;
-                return '';
+              if (match.toLowerCase().startsWith(':not(') && !match.includes(',')) return match;
+              if (match.toLowerCase().startsWith(':is(') || match.toLowerCase().startsWith(':where(')) return match;
+              return '';
             })
             .trim();
 
-        if (!cleanSelector) return false;
+          if (!cleanSelector) return false;
 
-        try {
-            // Zkontrolujeme, zda selektor odpovídá samotnému kořenovému prvku komponenty
+          try {
             if (componentRootElement.matches(cleanSelector)) return true;
-            // Nebo zda odpovídá některému z potomků komponenty
             if (componentRootElement.querySelector(cleanSelector)) return true;
-        } catch (e) {
-            // Fallback pro složitější selektory, které .matches nebo .querySelectorAll nezvládne dobře
-            const identifiersInRule = selectorText.match(/\.[\w-]+|#[\w-]+/g) || [];
-            if (identifiersInRule.some(identifier => {
-              // Zkontrolujeme, zda prvek nebo jeho rodiče mají danou třídu/ID,
-              // a zároveň zda je tento prvek součástí komponenty.
-              let current = elementToCheck;
-              while(current && current !== sourceDocument.body && current !== componentRootElement.parentElement) {
-                if (current.matches(identifier) && componentRootElement.contains(current)) return true;
-                current = current.parentElement;
-              }
-              return false;
-            })) {
-              return true;
-            }
-            // logMessage(`! Chyba nebo irelevantní selektor: "${selectorText}" (očištěno na "${cleanSelector}"). Chyba: ${e.message}`);
-        }
-        return false;
-    };
+          } catch (e) {
+            // logMessage(`! Chyba při testování selektoru: "${selectorText}" (očištěno na "${cleanSelector}"). Chyba: ${e.message}`);
+          }
+          return false;
+        };
 
-    styleElements.forEach((styleElement, styleIndex) => {
-        logMessage(`- Zpracovávám <style> element #${styleIndex + 1}`);
-        try {
+        styleElements.forEach((styleElement, styleIndex) => {
+          logMessage(`- Zpracovávám <style> element #${styleIndex + 1}`);
+          try {
             const sheet = styleElement.sheet;
             if (!sheet || !sheet.cssRules) {
-                 // Pokus o ruční parsování, pokud sheet.cssRules není dostupné (např. kvůli umístění v body)
-                logMessage(`  ! CSSStyleSheet.cssRules není dostupné pro <style> #${styleIndex + 1}. Zkouším ruční parsování.`);
-                const tempDiv = document.createElement('div');
-                const tempStyle = document.createElement('style');
-                tempStyle.textContent = styleElement.innerHTML;
-                tempDiv.appendChild(tempStyle); // Přidání do DOM (dočasně) je někdy nutné pro aktivaci .sheet
-                document.body.appendChild(tempDiv); // Dočasné připojení k hlavnímu dokumentu nástroje
-
-                const tempSheet = tempStyle.sheet;
-                if (tempSheet && tempSheet.cssRules) {
-                    logMessage(`  ✔ Ruční parsování úspěšné. Počet pravidel: ${tempSheet.cssRules.length}`);
-                    processRules(tempSheet.cssRules, lcbElement);
-                } else {
-                    logMessage(`  ‼ Ruční parsování selhalo pro <style> #${styleIndex + 1}. Obsah: ${styleElement.innerHTML.substring(0,100)}...`);
-                }
-                document.body.removeChild(tempDiv); // Odstranění dočasného elementu
-                return;
+              logMessage(`  ! CSSStyleSheet.cssRules není dostupné pro <style> #${styleIndex + 1}. Pravidla budou přeskočena.`);
+              return;
             }
             processRules(sheet.cssRules, lcbElement);
+          } catch (e) {
+            logMessage(`! Chyba při čtení stylů z <style> elementu #${styleIndex + 1} (pravděpodobně CORS): ${e.message}`);
+          }
+        });
 
-        } catch (e) {
-            logMessage(`! Chyba při čtení stylů z <style> elementu #${styleIndex + 1} (pravděpodobně bezpečnostní omezení nebo chyba parsování): ${e.message}`);
-            logMessage(`  Obsah <style> bloku: ${styleElement.innerHTML.substring(0, 200)}...`);
-        }
-    });
-
-    function processRules(rules, componentRootElement) {
-        for (const rule of rules) {
+        function processRules(rules, componentRootElement) {
+          for (const rule of rules) {
             if (rule instanceof CSSStyleRule) {
-                // Pro CSSStyleRule testujeme každý prvek v komponentě
-                let ruleAdded = false;
-                for (const elInComponent of allElements) {
-                    if (isSelectorRelevant(rule.selectorText, elInComponent, componentRootElement)) {
-                        relevantCssRules.add(rule.cssText);
-                        ruleAdded = true;
-                        break;
-                    }
-                }
-                // if(!ruleAdded) logMessage(`  DEBUG: Pravidlo "${rule.selectorText}" nebylo relevantní pro žádný prvek komponenty.`);
-
+              if (isSelectorRelevant(rule.selectorText, componentRootElement)) {
+                relevantCssRules.add(rule.cssText);
+              }
             } else if (rule instanceof CSSMediaRule) {
-                let relevantMediaStyles = '';
-                for (const innerRule of rule.cssRules) {
-                    if (innerRule instanceof CSSStyleRule) {
-                        for (const elInComponent of allElements) {
-                             if (isSelectorRelevant(innerRule.selectorText, elInComponent, componentRootElement)) {
-                                relevantMediaStyles += `\n  ${innerRule.cssText}`;
-                                break;
-                            }
-                        }
-                    }
+              let relevantMediaStyles = '';
+              for (const innerRule of rule.cssRules) {
+                if (innerRule instanceof CSSStyleRule && isSelectorRelevant(innerRule.selectorText, componentRootElement)) {
+                  relevantMediaStyles += `\n  ${innerRule.cssText}`;
                 }
-                if (relevantMediaStyles) {
-                    relevantCssRules.add(`@media ${rule.conditionText} {${relevantMediaStyles}\n}`);
-                }
+              }
+              if (relevantMediaStyles) {
+                relevantCssRules.add(`@media ${rule.conditionText} {${relevantMediaStyles}\n}`);
+              }
             }
-            // TODO: Zvážit podporu pro CSSImportRule, CSSSupportsRule atd. pokud by bylo potřeba.
+          }
         }
-    }
 
-    // Přidání inline stylů (jako fallback nebo doplnění, pokud by třídy nebyly dostatečné)
-    // Toto je teoreticky již pokryto klonováním, ale pro jistotu:
-    allElements.forEach(el => {
-        if (el.style && el.style.cssText) {
-            // Vytvoření unikátního selektoru pro element, pokud nemá ID
-            let selector;
-            if (el.id) {
-                selector = `#${el.id}`;
-            } else {
-                // Generování dočasného unikátního atributu pro selektor, pokud element nemá ID.
-                // Toto je komplexní a může být nespolehlivé.
-                // Prozatím se spoléháme na to, že cloneNode(true) zachová inline styly
-                // a extrakce se soustředí na styly z <style> bloků.
-                // Pokud by bylo nutné explicitně extrahovat inline styly do <style> bloku,
-                // vyžadovalo by to robustní generování selektorů.
-            }
-            // Příklad (velmi zjednodušený, nedoporučuje se pro produkci bez důkladného testování):
-            // if (selector) {
-            // relevantCssRules.add(`${selector} { ${el.style.cssText} }`);
-            // }
-        }
-    });
+        logMessage(`✔ Extrahováno ${relevantCssRules.size} relevantních CSS pravidel z <style> bloků.`);
+        return Array.from(relevantCssRules).join('\n');
+      }
 
-
-    logMessage(`✔ Extrahováno ${relevantCssRules.size} relevantních CSS pravidel z <style> bloků.`);
-    return Array.from(relevantCssRules).join('\n');
-}
-
-function standardizeComponent(sourceElementFromIframe, isComponentMode) {
+      function standardizeComponent(sourceElementFromIframe, isComponentMode) {
         const identifiedLcbOriginalElement = findLogicalComponentBlock(sourceElementFromIframe);
 
-        // --- OPRAVENÁ LOGIKA v4.3 ---
         let componentBoundary = identifiedLcbOriginalElement;
         const parentCell = identifiedLcbOriginalElement.parentElement;
 
@@ -761,7 +659,6 @@ function standardizeComponent(sourceElementFromIframe, isComponentMode) {
 
         let lcbClone = componentBoundary.cloneNode(true);
 
-        // Očištění klonu od UI prvků
         lcbClone.removeAttribute('data-cline-selected');
         if (lcbClone.style) lcbClone.style.outline = '';
         lcbClone.querySelectorAll('[data-cline-selected]').forEach((el) => {
@@ -769,62 +666,27 @@ function standardizeComponent(sourceElementFromIframe, isComponentMode) {
           if (el.style) el.style.outline = '';
         });
 
-        // Úprava pevné šířky pro responzivitu v komponentním režimu
         if (isComponentMode) {
-            let isFixedWidthComponent = false;
-            let fixedWidthValue = '';
+          let isFixedWidthComponent = false;
+          let componentOriginalWidth = null;
 
-            if (lcbClone.style && lcbClone.style.width && lcbClone.style.width.endsWith('px')) {
-                const originalWidth = lcbClone.style.width;
-                logMessage(`- Detekována pevná inline šířka (${originalWidth}) na kořenovém elementu komponenty.`);
-                isFixedWidthComponent = true;
-                // Původní inline width se ponechá, pouze se doplní max-width
-                lcbClone.style.maxWidth = originalWidth;
-                logMessage(`- Ponechávám inline width: ${originalWidth} a nastavuji max-width: ${originalWidth}.`);
+          if (lcbClone.style && lcbClone.style.width && lcbClone.style.width.endsWith('px')) {
+            componentOriginalWidth = lcbClone.style.width;
+          } else if (lcbClone.getAttribute('width') && /^\d+(px)?$/.test(lcbClone.getAttribute('width').trim())) {
+            componentOriginalWidth = lcbClone.getAttribute('width').trim().endsWith('px') ? lcbClone.getAttribute('width').trim() : lcbClone.getAttribute('width').trim() + 'px';
+          }
 
-            } else if (lcbClone.getAttribute('width') && !lcbClone.tagName.toLowerCase().match(/^(img|iframe|embed|object|video)$/)) {
-                const originalWidthAttr = lcbClone.getAttribute('width');
-                // Regulární výraz pro kontrolu, zda je hodnota atributu width číslo nebo číslo následované "px"
-                if (/^\\d+(px)?$/.test(originalWidthAttr.trim())) {
-                     const widthVal = originalWidthAttr.trim().endsWith('px') ? originalWidthAttr.trim() : originalWidthAttr.trim() + 'px';
-                     logMessage(`- Detekován atribut width=\"${originalWidthAttr}\" na kořenovém elementu.`);
-                     isFixedWidthComponent = true;
-                     // Původní atribut width se ponechá, pouze se doplní max-width
-                     lcbClone.style.maxWidth = widthVal;
-                     // Pokud je atribut width nastaven bez 'px', a je to číslo, tak pro jistotu styl width také nastavíme s 'px'
-                     // aby nedošlo ke konfliktu mezi atributem "250" a style.width=""
-                     if (/^\\d+$/.test(originalWidthAttr.trim()) && lcbClone.style) {
-                        lcbClone.style.width = widthVal;
-                        logMessage(`- Doplňuji style.width=\"${widthVal}\" pro konzistenci s atributem width.`);
-                     }
-                     logMessage(`- Ponechávám atribut width=\"${originalWidthAttr}\" (nebo upravený style.width) a nastavuji style.maxWidth=\"${widthVal}\".`);
-                } else {
-                    logMessage(`- Atribut width=\"${originalWidthAttr}\" na kořenovém elementu není pevná pixelová hodnota. Ponechávám beze změny atributu, zvažuji nastavení width: 100%.`);
-                    // Pro ne-pixelové hodnoty (např. "100%") můžeme zvážit nastavení style.width = '100%'
-                    // pokud chceme, aby se komponenta roztáhla.
-                    // Prozatím, pokud to není explicitní pixelová šířka, necháme atribut tak jak je,
-                    // a pokud nemá ani inline styl width, tak se může aplikovat width:100% níže.
-                     if (!lcbClone.style.width) { // Pokud nemá ani inline styl width
-                        logMessage(`- Kořenový element nemá inline styl width. Nastavuji width: 100% pro fluiditu.`);
-                        lcbClone.style.width = '100%';
-                     }
-                }
-            }
-
-            // Pokud komponenta NENÍ explicitně pevně široká (v px) a nemá nastavený inline styl width,
-            // nastavíme jí width: 100% pro fluidní chování v rámci wrapperu.
-            // Toto je důležité pro bloky, které mají být full-width.
-            if (!isFixedWidthComponent && lcbClone.style && !lcbClone.style.width) {
-                logMessage('- Kořenový element komponenty nemá detekovanou pevnou pixelovou šířku ani inline styl width. Nastavuji width: 100% pro fluiditu.');
-                lcbClone.style.width = '100%';
-            } else if (isFixedWidthComponent) {
-                 logMessage('- Kořenový element má pevnou šířku. Nebude nastavena na 100%.');
-            } else if (lcbClone.style && lcbClone.style.width) {
-                 logMessage(`- Kořenový element má již inline styl width: ${lcbClone.style.width}. Ponechávám.`);
-            }
+          if (componentOriginalWidth) {
+            isFixedWidthComponent = true;
+            logMessage(`- Detekována pevná šířka komponenty (${componentOriginalWidth}). Nastavuji max-width pro responzivitu.`);
+            lcbClone.style.maxWidth = componentOriginalWidth;
+            if (!lcbClone.style.width) lcbClone.style.width = componentOriginalWidth; // Zajistit i inline styl
+          } else {
+            logMessage('- Komponenta nemá pevnou pixelovou šířku. Nastavuji width: 100% pro fluiditu.');
+            lcbClone.style.width = '100%';
+          }
         }
 
-        // Spustíme transformaci DIV->TABLE, pokud je potřeba (uvnitř klonu)
         const problematicDivContainer = lcbClone.querySelector('.m.y.wa');
         if (problematicDivContainer) {
           const columns = problematicDivContainer.querySelectorAll(':scope > .u.y, :scope > .u.y');
@@ -857,98 +719,43 @@ function standardizeComponent(sourceElementFromIframe, isComponentMode) {
         }
 
         if (isComponentMode) {
-          logMessage('Standardizace komponenty (Režim v4.3 - soběstačný)');
+          logMessage('Standardizace komponenty (Režim v4.4 - soběstačný)');
 
           const relevantStyles = extractRelevantStyles(lcbClone, emailPreview.contentWindow.document);
           const styleBlock = relevantStyles ? `<style type="text/css">\n${relevantStyles}\n</style>\n` : '';
           logMessage(`- Komponenta zabalena s ${relevantStyles ? 'vlastními' : 'žádnými'} CSS styly.`);
 
           let finalHtml;
-          let componentOriginalWidth = null;
-
-          // Zjistíme původní šířku komponenty pro správné nastavení wrapperu
-          if (lcbClone.style && lcbClone.style.width && lcbClone.style.width.endsWith('px')) {
-            componentOriginalWidth = lcbClone.style.width;
-          } else if (lcbClone.getAttribute('width') && /^\\d+(px)?$/.test(lcbClone.getAttribute('width').trim())) {
-            componentOriginalWidth = lcbClone.getAttribute('width').trim().endsWith('px') ? lcbClone.getAttribute('width').trim() : lcbClone.getAttribute('width').trim() + 'px';
-          }
 
           logMessage('- Vytvářím nový tabulkový wrapper pro zajištění konzistence a odsazení.');
           const wrapperTable = document.createElement('table');
           wrapperTable.setAttribute('cellpadding', '0');
           wrapperTable.setAttribute('cellspacing', '0');
+          wrapperTable.setAttribute('width', '100%');
           wrapperTable.setAttribute('role', 'presentation');
-          // wrapperTable.setAttribute('border', '1'); // Pro debugování
-          // wrapperTable.style.borderColor = 'blue'; // Pro debugování
-
           const wrapperTbody = wrapperTable.appendChild(document.createElement('tbody'));
           const wrapperTr = wrapperTbody.appendChild(document.createElement('tr'));
           const wrapperTd = wrapperTr.appendChild(document.createElement('td'));
 
-          if (componentOriginalWidth) {
-            // Pokud má komponenta pevnou šířku, wrapperTable ji převezme a centruje se,
-            // nebo necháme wrapperTable 100% a centrujeme obsah v TD.
-            // Pro tlačítko je lepší, když samotná tabulka tlačítka má pevnou šířku.
-            // WrapperTable bude 100% pro případné pozadí, wrapperTd bude centrovat.
-            wrapperTable.setAttribute('width', '100%');
-            wrapperTd.setAttribute('align', 'center'); // Centruje obsah TD
-            logMessage(`- Komponenta má původní šířku ${componentOriginalWidth}. Wrapper TD bude centrovat.`);
-            // Zajistíme, že samotný lcbClone (tlačítko) si udrží svou šířku
-            lcbClone.style.width = componentOriginalWidth;
-            lcbClone.style.maxWidth = componentOriginalWidth; // Důležité pro Outlook
-             if (lcbClone.tagName === 'TABLE') { // Pokud je lcbClone tabulka (což by tlačítko mělo být)
-                lcbClone.setAttribute('align', 'center'); // Pro Outlook centrování tabulky
-                lcbClone.style.margin = '0 auto'; // Pro moderní klienty centrování tabulky
-
-                // Pojistka pro šířku odkazu <a> uvnitř tlačítka
-                const buttonLink = lcbClone.querySelector('a[style*="width"]');
-                if (buttonLink && componentOriginalWidth) {
-                    if (!buttonLink.style.width || buttonLink.style.width !== componentOriginalWidth) {
-                        logMessage(`- Upravuji šířku vnitřního odkazu <a> na ${componentOriginalWidth}. Původní: "${buttonLink.style.width}"`);
-                        buttonLink.style.width = componentOriginalWidth;
-                    }
-                    // Zajistíme, aby i odkaz měl max-width, pokud by byl příliš agresivně responzivní
-                    if (!buttonLink.style.maxWidth || buttonLink.style.maxWidth !== componentOriginalWidth) {
-                         buttonLink.style.maxWidth = componentOriginalWidth;
-                    }
-                    // Ujistíme se, že display: inline-block je zachován, pokud chybí
-                    if (!buttonLink.style.display || !buttonLink.style.display.includes('inline-block')) {
-                        logMessage(`- Doplňuji/Opravuji display: inline-block na vnitřním odkazu <a>.`);
-                        buttonLink.style.display = 'inline-block';
-                    }
-                } else if (buttonLink && !componentOriginalWidth) {
-                    logMessage('- Komponenta nemá pevnou šířku, ale vnitřní odkaz ano. Ponechávám šířku odkazu, ale zkontroluji responzivitu.');
-                    // Pokud by hlavní komponenta byla fluidní, ale tlačítko uvnitř mělo pevnou šířku,
-                    // je třeba zvážit, zda to je chtěné chování. Prozatím ponecháme.
-                }
-            }
-          } else {
-            // Pokud komponenta nemá pevnou šířku, wrapperTable a wrapperTd budou 100%
-            wrapperTable.setAttribute('width', '100%');
-            wrapperTd.setAttribute('align', 'left'); // Nebo podle potřeby
-            logMessage('- Komponenta nemá detekovanou pevnou šířku. Wrapper bude fluidní.');
-          }
-
+          // Z původního `componentBoundary` (obvykle TD) převezmeme zarovnání
+          const originalAlign = componentBoundary.getAttribute('align') || emailPreview.contentWindow.getComputedStyle(componentBoundary).textAlign;
+          wrapperTd.setAttribute('align', originalAlign || 'center');
+          logMessage(`- Wrapper TD bude zarovnávat obsah na: "${wrapperTd.getAttribute('align')}".`);
 
           if (lcbClone.tagName === 'TD') {
-            // Pokud jsme extrahovali celou buňku (což by pro tlačítko nemělo nastat, pokud je LCB table)
-            // Přesto zachováme logiku, ale wrapperTd už máme.
-            // V tomto případě by lcbClone (TD) nahradil wrapperTd.
-            // To je ale komplexnější, pro tlačítko předpokládáme, že LCB je TABLE.
-            // Pro jednoduchost: pokud je lcbClone TD, jeho obsah se přesune do wrapperTd
+            // Pokud je extrahovaný blok sám o sobě TD, vložíme jeho obsah do naší nové buňky a zkopírujeme atributy
             while (lcbClone.firstChild) {
-                wrapperTd.appendChild(lcbClone.firstChild);
+              wrapperTd.appendChild(lcbClone.firstChild);
             }
-            // Převezmeme styly a atributy z původní TD do wrapperTd
-            Array.from(lcbClone.attributes).forEach(attr => {
-                if (attr.name !== 'width' && attr.name !== 'align') { // width a align řídíme explicitně
-                    wrapperTd.setAttribute(attr.name, attr.value);
-                }
+            Array.from(lcbClone.attributes).forEach((attr) => {
+              if (attr.name !== 'width' && attr.name !== 'align' && attr.name !== 'class' && attr.name !== 'style') {
+                wrapperTd.setAttribute(attr.name, attr.value);
+              }
             });
-            logMessage('- LCB byl TD element. Jeho obsah a atributy (kromě width/align) byly přeneseny do wrapperTd.');
-
+            wrapperTd.style.cssText = lcbClone.style.cssText;
+            logMessage('- LCB byl TD element. Jeho obsah a styly byly přeneseny do wrapperTd.');
           } else {
-            // Pokud jsme extrahovali blok (TABLE, DIV), zabalíme ho do wrapperTd
+            // Pokud je to tabulka nebo div, prostě ho vložíme
             wrapperTd.appendChild(lcbClone);
           }
           finalHtml = wrapperTable.outerHTML;
