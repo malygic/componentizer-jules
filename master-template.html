@@ -1,0 +1,951 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html
+  lang="cs"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  style="width: 100%; font-family: arial, 'helvetica neue', helvetica, sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 0; margin: 0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta content="telephone=no" name="format-detection" />
+    <title>Master Email Template</title>
+    <!--[if (mso 16)]>
+      <style type="text/css">
+        a {
+          text-decoration: none;
+        }
+      </style>
+    <![endif]-->
+    <!--[if gte mso 9]>
+      <xml>
+        <o:OfficeDocumentSettings>
+          <o:AllowPNG></o:AllowPNG>
+          <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+      </xml>
+    <![endif]-->
+    <link href="https://fonts.googleapis.com/css?family=Inter:700" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+      /* --- BASE STYLES & RESETS --- */
+      #outlook a {
+        padding: 0;
+      }
+      .ExternalClass {
+        width: 100%;
+      }
+      .ExternalClass,
+      .ExternalClass p,
+      .ExternalClass span,
+      .ExternalClass font,
+      .ExternalClass td,
+      .ExternalClass div {
+        line-height: 100%;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        width: 100%;
+        font-family: arial, 'helvetica neue', helvetica, sans-serif;
+      }
+      table,
+      td {
+        border-collapse: collapse;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+        border-spacing: 0;
+        table-layout: fixed;
+        margin: 0 auto;
+      }
+      table table table {
+        table-layout: auto;
+      }
+      img {
+        border: 0;
+        height: auto;
+        line-height: 100%;
+        outline: none;
+        text-decoration: none;
+        -ms-interpolation-mode: bicubic;
+      }
+      p {
+        display: block;
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a {
+        color: #c86e6e;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .yshortcuts a {
+        border-bottom: none !important;
+      }
+      img:hover {
+        opacity: 0.9 !important;
+      }
+
+      /* --- EMAIL CLIENT SPECIFIC --- */
+      a[x-apple-data-detectors] {
+        color: inherit !important;
+        text-decoration: none !important;
+        font-size: inherit !important;
+        font-family: inherit !important;
+        font-weight: inherit !important;
+        line-height: inherit !important;
+      }
+      u + .body .full {
+        width: 100% !important;
+        width: 100vw !important;
+      } /* Gmail fix */
+      u + .emailify .gs {
+        background: #000;
+        mix-blend-mode: screen;
+        display: inline-block;
+        padding: 0;
+        margin: 0;
+      } /* Gmail dark mode fix */
+      u + .emailify .gd {
+        background: #000;
+        mix-blend-mode: difference;
+        display: inline-block;
+        padding: 0;
+        margin: 0;
+      } /* Gmail dark mode fix */
+      u + .emailify a {
+        color: inherit !important;
+        text-decoration: none !important;
+      } /* Gmail fix */
+      #MessageViewBody a {
+        color: inherit !important;
+        text-decoration: none !important;
+      } /* Outlook App fix */
+      .ReadMsgBody {
+        width: 100%;
+        background-color: #ffffff;
+      } /* Hotmail fix */
+
+      /* --- HELPER CLASSES --- */
+      .es-desk-hidden {
+        display: none;
+        float: left;
+        overflow: hidden;
+        width: 0;
+        max-height: 0;
+        line-height: 0;
+        mso-hide: all;
+      }
+      .es-button {
+        mso-style-priority: 100 !important;
+        text-decoration: none !important;
+      }
+      .test {
+        border-radius: 4px;
+      } /* from 11.html */
+      .textbutton a {
+        font-family: Arial, sans-serif !important;
+      } /* from 20.html */
+      .btn-link a {
+        color: #ffffff !important;
+      } /* from 20.html */
+      .textlink a {
+        color: #414a51 !important;
+      } /* from 20.html */
+      .preferencelink a {
+        color: #ffffff !important;
+        text-decoration: underline !important;
+      } /* from 20.html */
+      div.wa {
+        font-size: 0;
+      } /* from 6.html */
+
+      /* --- OGSB (Gmail App) STYLES --- */
+      [data-ogsb] .es-button {
+        border-width: 0 !important;
+        padding: 10px 20px 10px 20px !important;
+      }
+      [data-ogsb] .es-button.es-button-1 {
+        padding: 15px 60px !important;
+      } /* Variations observed */
+      [data-ogsb] .es-button.es-button-2 {
+        padding: 15px 30px !important;
+      } /* Variations observed */
+      [data-ogsb] .es-button.es-button-3 {
+        padding: 10px 25px !important;
+      } /* Variations observed */
+      [data-ogsb] .es-button.es-button-4 {
+        padding: 20px 30px !important;
+      } /* Variations observed */
+      [data-ogsb] .es-button.es-button-5 {
+        padding: 10px 30px !important;
+      } /* Variations observed */
+
+      /* --- STYLES FROM 6.html / 23.html --- */
+      @media only screen and (min-width: 599px) {
+        .m {
+          width: 100% !important;
+          max-width: 100%;
+        }
+        .u {
+          width: 50% !important;
+          max-width: 50%;
+        }
+        .t {
+          width: 0% !important;
+          max-width: 0%;
+        }
+        .ys {
+          width: 500px !important;
+          max-width: 500px;
+        }
+        .n {
+          width: 488px !important;
+          max-width: 488px;
+        }
+        .xr {
+          width: 220px !important;
+          max-width: 220px;
+        } /* From 23.html, different from 6.html */
+        .d {
+          width: 60px !important;
+          max-width: 60px;
+        }
+        .m6 {
+          width: 568px !important;
+          max-width: 568px;
+        }
+        /* Styles specific to 6.html */
+        .h {
+          width: 37px !important;
+          max-width: 37px;
+        }
+        .bf {
+          width: 40px !important;
+          max-width: 40px;
+        }
+        .bv {
+          width: 323px !important;
+          max-width: 323px;
+        }
+        .j {
+          width: 30.2% !important;
+          max-width: 30.2%;
+        }
+        .mw {
+          width: 13.4% !important;
+          max-width: 13.4%;
+        }
+        .v {
+          width: 2% !important;
+          max-width: 2%;
+        }
+        .v9 {
+          width: 24% !important;
+          max-width: 24%;
+        }
+        .l {
+          width: 30.4% !important;
+          max-width: 30.4%;
+        }
+        .a {
+          width: 106px !important;
+          max-width: 106px;
+        }
+        .e {
+          width: 254px !important;
+          max-width: 254px;
+        }
+        .xr {
+          width: 400px !important;
+          max-width: 400px;
+        } /* From 6.html, different from 23.html - Keep both or decide which structure is primary */
+        .xr2 {
+          width: 220px !important;
+          max-width: 220px;
+        }
+      }
+      @media screen and (min-width: 599px) {
+        /* moz-text-html specific */
+        .moz-text-html .m {
+          width: 100% !important;
+          max-width: 100%;
+        }
+        .moz-text-html .u {
+          width: 50% !important;
+          max-width: 50%;
+        }
+        .moz-text-html .t {
+          width: 0% !important;
+          max-width: 0%;
+        }
+        .moz-text-html .ys {
+          width: 500px !important;
+          max-width: 500px;
+        }
+        .moz-text-html .n {
+          width: 488px !important;
+          max-width: 488px;
+        }
+        .moz-text-html .xr {
+          width: 220px !important;
+          max-width: 220px;
+        } /* From 23.html */
+        .moz-text-html .d {
+          width: 60px !important;
+          max-width: 60px;
+        }
+        .moz-text-html .m6 {
+          width: 568px !important;
+          max-width: 568px;
+        }
+        /* Styles specific to 6.html */
+        .moz-text-html .h {
+          width: 37px !important;
+          max-width: 37px;
+        }
+        .moz-text-html .bf {
+          width: 40px !important;
+          max-width: 40px;
+        }
+        .moz-text-html .bv {
+          width: 323px !important;
+          max-width: 323px;
+        }
+        .moz-text-html .j {
+          width: 30.2% !important;
+          max-width: 30.2%;
+        }
+        .moz-text-html .mw {
+          width: 13.4% !important;
+          max-width: 13.4%;
+        }
+        .moz-text-html .v {
+          width: 2% !important;
+          max-width: 2%;
+        }
+        .moz-text-html .v9 {
+          width: 24% !important;
+          max-width: 24%;
+        }
+        .moz-text-html .l {
+          width: 30.4% !important;
+          max-width: 30.4%;
+        }
+        .moz-text-html .a {
+          width: 106px !important;
+          max-width: 106px;
+        }
+        .moz-text-html .e {
+          width: 254px !important;
+          max-width: 254px;
+        }
+        .moz-text-html .xr {
+          width: 400px !important;
+          max-width: 400px;
+        } /* From 6.html */
+        .moz-text-html .xr2 {
+          width: 220px !important;
+          max-width: 220px;
+        }
+      }
+
+      /* --- RESPONSIVE STYLES --- */
+      @media only screen and (max-width: 600px) {
+        /* General Responsive */
+        p,
+        ul li,
+        ol li,
+        a {
+          line-height: 150% !important;
+        }
+        h1,
+        h2,
+        h3,
+        h1 a,
+        h2 a,
+        h3 a {
+          line-height: 120% !important;
+        }
+        h1 {
+          font-size: 30px !important;
+          text-align: left;
+        }
+        h2 {
+          font-size: 24px !important;
+          text-align: left;
+        } /* Default */
+        h3 {
+          font-size: 18px !important;
+          text-align: left;
+        } /* Default */
+        /* Specific H tag sizes found */
+        h2 {
+          font-size: 18px !important;
+        } /* From t3.html, 25.html */
+        h3 {
+          font-size: 16px !important;
+        } /* From 9.html, 7.html, 11.html, 12.html, 13.html, 14.html, 15.html, 16.html, 17.html, 19.html, 18.html, 21.html, 22.html, 23.html, 24.html, 26.html, t4.html, t5.html, temp1.html */
+        h3 {
+          font-size: 14px !important;
+        } /* From t3.html, 25.html */
+
+        h1 a {
+          text-align: left;
+        }
+        .es-header-body h1 a,
+        .es-content-body h1 a,
+        .es-footer-body h1 a {
+          font-size: 30px !important;
+        }
+        h2 a {
+          text-align: left;
+        }
+        .es-header-body h2 a,
+        .es-content-body h2 a,
+        .es-footer-body h2 a {
+          font-size: 24px !important;
+        } /* Default */
+        .es-header-body h2 a,
+        .es-content-body h2 a,
+        .es-footer-body h2 a {
+          font-size: 18px !important;
+        } /* From t3.html, 25.html */
+
+        h3 a {
+          text-align: left;
+        }
+        .es-header-body h3 a,
+        .es-content-body h3 a,
+        .es-footer-body h3 a {
+          font-size: 18px !important;
+        } /* Default */
+        .es-header-body h3 a,
+        .es-content-body h3 a,
+        .es-footer-body h3 a {
+          font-size: 16px !important;
+        } /* From 9.html, etc. */
+        .es-header-body h3 a,
+        .es-content-body h3 a,
+        .es-footer-body h3 a {
+          font-size: 14px !important;
+        } /* From t3.html, 25.html */
+
+        .es-menu td a {
+          font-size: 14px !important;
+        }
+        .es-header-body p,
+        .es-header-body ul li,
+        .es-header-body ol li,
+        .es-header-body a {
+          font-size: 12px !important;
+        }
+        .es-content-body p,
+        .es-content-body ul li,
+        .es-content-body ol li,
+        .es-content-body a {
+          font-size: 14px !important;
+        }
+        .es-footer-body p,
+        .es-footer-body ul li,
+        .es-footer-body ol li,
+        .es-footer-body a {
+          font-size: 12px !important;
+        } /* Default */
+        .es-footer-body p,
+        .es-footer-body ul li,
+        .es-footer-body ol li,
+        .es-footer-body a {
+          font-size: 13px !important;
+        } /* From t3.html, 25.html */
+
+        .es-infoblock p,
+        .es-infoblock ul li,
+        .es-infoblock ol li,
+        .es-infoblock a {
+          font-size: 12px !important;
+        }
+        *[class='gmail-fix'] {
+          display: none !important;
+        }
+        .es-m-txt-c,
+        .es-m-txt-c h1,
+        .es-m-txt-c h2,
+        .es-m-txt-c h3 {
+          text-align: center !important;
+        }
+        .es-m-txt-r,
+        .es-m-txt-r h1,
+        .es-m-txt-r h2,
+        .es-m-txt-r h3 {
+          text-align: right !important;
+        }
+        .es-m-txt-l,
+        .es-m-txt-l h1,
+        .es-m-txt-l h2,
+        .es-m-txt-l h3 {
+          text-align: left !important;
+        }
+        .es-m-txt-r img,
+        .es-m-txt-c img,
+        .es-m-txt-l img {
+          display: inline !important;
+        }
+        .es-button-border {
+          display: inline-block !important;
+        }
+        a.es-button,
+        button.es-button {
+          font-size: 14px !important;
+          display: inline-block !important;
+        } /* Most common */
+        a.es-button,
+        button.es-button {
+          font-size: 16px !important;
+          display: inline-block !important;
+        } /* Found in many */
+        a.es-button,
+        button.es-button {
+          font-size: 12px !important;
+          display: inline-block !important;
+        } /* From t3.html, 25.html */
+
+        .es-btn-fw {
+          border-width: 10px 0px !important;
+          text-align: center !important;
+        }
+        .es-adaptive table,
+        .es-btn-fw,
+        .es-btn-fw-brdr,
+        .es-left,
+        .es-right {
+          width: 100% !important;
+        }
+        .es-content table,
+        .es-header table,
+        .es-footer table,
+        .es-content,
+        .es-footer,
+        .es-header {
+          width: 100% !important;
+          max-width: 600px !important;
+        }
+        .es-adapt-td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .adapt-img {
+          width: 100% !important;
+          height: auto !important;
+        }
+        .es-m-p0 {
+          padding: 0 !important;
+        }
+        .es-m-p0r {
+          padding-right: 0 !important;
+        }
+        .es-m-p0l {
+          padding-left: 0 !important;
+        }
+        .es-m-p0t {
+          padding-top: 0 !important;
+        }
+        .es-m-p0b {
+          padding-bottom: 0 !important;
+        }
+        .es-m-p5 {
+          padding: 5px !important;
+        }
+        .es-m-p5t {
+          padding-top: 5px !important;
+        }
+        .es-m-p5b {
+          padding-bottom: 5px !important;
+        }
+        .es-m-p5r {
+          padding-right: 5px !important;
+        }
+        .es-m-p5l {
+          padding-left: 5px !important;
+        }
+        .es-m-p10 {
+          padding: 10px !important;
+        }
+        .es-m-p10t {
+          padding-top: 10px !important;
+        }
+        .es-m-p10b {
+          padding-bottom: 10px !important;
+        }
+        .es-m-p10r {
+          padding-right: 10px !important;
+        }
+        .es-m-p10l {
+          padding-left: 10px !important;
+        }
+        .es-m-p15 {
+          padding: 15px !important;
+        }
+        .es-m-p15t {
+          padding-top: 15px !important;
+        }
+        .es-m-p15b {
+          padding-bottom: 15px !important;
+        }
+        .es-m-p15r {
+          padding-right: 15px !important;
+        }
+        .es-m-p15l {
+          padding-left: 15px !important;
+        }
+        .es-m-p20 {
+          padding: 20px !important;
+        }
+        .es-m-p20t {
+          padding-top: 20px !important;
+        }
+        .es-m-p20b {
+          padding-bottom: 20px !important;
+        }
+        .es-m-p20r {
+          padding-right: 20px !important;
+        }
+        .es-m-p20l {
+          padding-left: 20px !important;
+        }
+        .es-m-p25 {
+          padding: 25px !important;
+        }
+        .es-m-p25t {
+          padding-top: 25px !important;
+        }
+        .es-m-p25b {
+          padding-bottom: 25px !important;
+        }
+        .es-m-p25r {
+          padding-right: 25px !important;
+        }
+        .es-m-p25l {
+          padding-left: 25px !important;
+        }
+        .es-m-p30 {
+          padding: 30px !important;
+        }
+        .es-m-p30t {
+          padding-top: 30px !important;
+        }
+        .es-m-p30b {
+          padding-bottom: 30px !important;
+        }
+        .es-m-p30r {
+          padding-right: 30px !important;
+        }
+        .es-m-p30l {
+          padding-left: 30px !important;
+        }
+        .es-m-p35 {
+          padding: 35px !important;
+        }
+        .es-m-p35t {
+          padding-top: 35px !important;
+        }
+        .es-m-p35b {
+          padding-bottom: 35px !important;
+        }
+        .es-m-p35r {
+          padding-right: 35px !important;
+        }
+        .es-m-p35l {
+          padding-left: 35px !important;
+        }
+        .es-m-p40 {
+          padding: 40px !important;
+        }
+        .es-m-p40t {
+          padding-top: 40px !important;
+        }
+        .es-m-p40b {
+          padding-bottom: 40px !important;
+        }
+        .es-m-p40r {
+          padding-right: 40px !important;
+        }
+        .es-m-p40l {
+          padding-left: 40px !important;
+        }
+        .es-mobile-hidden,
+        .es-hidden {
+          display: none !important;
+        }
+        tr.es-desk-hidden,
+        td.es-desk-hidden,
+        table.es-desk-hidden {
+          width: auto !important;
+          overflow: visible !important;
+          float: none !important;
+          max-height: inherit !important;
+          line-height: inherit !important;
+          display: table-row !important;
+        } /* Adjusted display */
+        /* tr.es-desk-hidden { display:table-row!important } */ /* Original */
+        table.es-desk-hidden {
+          display: table !important;
+        }
+        td.es-desk-menu-hidden {
+          display: table-cell !important;
+        }
+        .es-menu td {
+          width: 1% !important;
+        }
+        table.es-table-not-adapt,
+        .esd-block-html table {
+          width: auto !important;
+        }
+        table.es-social {
+          display: inline-block !important;
+        }
+        table.es-social td {
+          display: inline-block !important;
+        }
+
+        /* Responsive styles from 20.html */
+        /**[class="table-inner"] { width: 90% !important; text-align: center !important; }*/
+        /**[class="table-full"] { width: 100% !important; text-align: center !important; }*/
+        /*img[class="img1"] { width: 100% !important; height: auto !important; }*/
+        td[class='hide'] {
+          max-height: 0px !important;
+          height: 0px !important;
+          display: none !important;
+        } /* Combined with es-mobile-hidden */
+        *[class='contact-button'] {
+          border-top: 0px !important;
+        }
+
+        /* Responsive styles from 6.html / 23.html */
+        table.mq {
+          width: 100% !important;
+        }
+        td.mq {
+          width: auto !important;
+        }
+        .emailify {
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+        }
+        u + .emailify .glist {
+          margin-left: 1em !important;
+        }
+        td.x {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        .mq img {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+        td.b.nw > table,
+        td.b.nw a {
+          width: auto !important;
+        }
+        .gu {
+          display: block !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        .p {
+          display: none !important;
+          max-width: 0 !important;
+          max-height: 0 !important;
+          overflow: hidden !important;
+          mso-hide: all !important;
+        }
+        td.b td {
+          background-size: cover !important;
+        } /* Added from 6.html */
+
+        /* Padding adjustments from 6.html / 23.html */
+        div.r.lp > table > tbody > tr > td,
+        div.r.lp > div > table > tbody > tr > td {
+          padding-top: 8px !important;
+        }
+        div.r.jn > table > tbody > tr > td,
+        div.r.jn > div > table > tbody > tr > td {
+          padding-right: 8px !important;
+        }
+        div.r.lz > table > tbody > tr > td,
+        div.r.lz > div > table > tbody > tr > td {
+          padding-bottom: 0px !important;
+        }
+        div.r.dhn > table > tbody > tr > td,
+        div.r.dhn > div > table > tbody > tr > td {
+          padding-left: 8px !important;
+        }
+        td.x.uo > div,
+        td.x.uo > div > p,
+        td.x.uo > p,
+        td.x.uo > div > h1,
+        td.x.uo > h1 {
+          text-align: right !important;
+        }
+        div.w.eya > table > tbody > tr > td,
+        div.w.eya > div > table > tbody > tr > td {
+          padding-right: 16px !important;
+        }
+        div.w.yss > table > tbody > tr > td,
+        div.w.yss > div > table > tbody > tr > td {
+          padding-left: 16px !important;
+        }
+        div.r.eya > table > tbody > tr > td,
+        div.r.eya > div > table > tbody > tr > td {
+          padding-right: 16px !important;
+        }
+        div.r.yss > table > tbody > tr > td,
+        div.r.yss > div > table > tbody > tr > td {
+          padding-left: 16px !important;
+        }
+        div.r.aue > table > tbody > tr > td,
+        div.r.aue > div > table > tbody > tr > td {
+          padding-right: 12px !important;
+        }
+        div.r.uo8 > table > tbody > tr > td,
+        div.r.uo8 > div > table > tbody > tr > td {
+          padding-left: 12px !important;
+        }
+        td.b.f > table > tbody > tr > td > a {
+          padding-top: 15px !important;
+        }
+        td.b.bv1 > table > tbody > tr > td > a {
+          padding-right: 22px !important;
+        }
+        td.b.nh > table > tbody > tr > td > a {
+          padding-bottom: 15px !important;
+        }
+        td.b.vp > table > tbody > tr > td > a {
+          padding-left: 22px !important;
+        }
+        td.b.xr2u a,
+        td.b.xr2u span {
+          font-size: 18px !important;
+        }
+        div.g.i > table > tbody > tr > td {
+          padding-bottom: 40px !important;
+        }
+        td.x.f9 > div,
+        td.x.f9 > div > p,
+        td.x.f9 > p,
+        td.x.f9 > div > h1,
+        td.x.f9 > h1 {
+          text-align: center !important;
+        }
+        div.r.bv1s > table > tbody > tr > td,
+        div.r.bv1s > div > table > tbody > tr > td {
+          padding-top: 20px !important;
+        }
+        div.r.z > table > tbody > tr > td,
+        div.r.z > div > table > tbody > tr > td {
+          padding-right: 20px !important;
+        }
+        div.r.jd > table > tbody > tr > td,
+        div.r.jd > div > table > tbody > tr > td {
+          padding-bottom: 20px !important;
+        }
+        div.r.tn > table > tbody > tr > td,
+        div.r.tn > div > table > tbody > tr > td {
+          padding-left: 20px !important;
+        }
+        td.x.zd {
+          padding-left: 4px !important;
+        }
+        td.x.vps span,
+        td.x.vps > div,
+        td.x.vps {
+          font-size: 16px !important;
+        }
+        div.g.ke > table > tbody > tr > td {
+          padding-bottom: 60px !important;
+        }
+
+        /* === NOVĚ PŘIDANÁ CSS PRAVIDLA === */
+        .m {
+          width: 100% !important;
+          max-width: 100% !important;
+          display: block !important;
+        }
+        .gq,
+        .c {
+          width: 100% !important;
+          max-width: 100% !important;
+          display: block !important;
+          margin-top: 10px !important; /* Volitelné odsazení shora */
+        }
+        .r.ey.y {
+          /* Nebo obecnější selektor pro tyto kontejnery */
+          width: 100% !important;
+          max-width: 100% !important;
+          display: block !important;
+        }
+        /* === KONEC NOVĚ PŘIDANÝCH CSS PRAVIDEL === */
+      }
+      @media screen yahoo {
+        /* Yahoo specific from 6.html/23.html */
+        .gu {
+          mso-hide: all !important;
+          display: none !important;
+          height: 0 !important;
+          overflow: hidden !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="body emailify"
+    style="width: 100%; font-family: arial, 'helvetica neue', helvetica, sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 0; margin: 0; background-color: #ffffff">
+    <div style="font-size: 0; line-height: 0">
+      <custom name="opencounter" type="tracking" />
+      <custom name="usermatch" type="tracking" />
+    </div>
+
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" style="background-color: #ffffff">
+      <tr>
+        <td align="center" valign="top">
+          <custom type="header" />
+        </td>
+      </tr>
+      <tr>
+        <td align="center">
+          <table cellspacing="0" cellpadding="0" border="0" width="100%" class="es-wrapper container" align="center" style="max-width: 600px; width: 100%" bgcolor="#ffffff">
+            <tr>
+              <td class="es-p0">
+                <table class="es-content-body tb_properties border_style" style="background-color: #ffffff; width: 100%" cellspacing="0" cellpadding="0" bgcolor="#ffffff">
+                  <tr>
+                    <td align="center" valign="top" class="content_padding es-p20">
+                      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                          <td align="center" valign="top">
+                            <div data-type="slot" data-key="main_content_area"></div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" valign="top">
+          <custom type="footer" />
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Univerzální Nástroj pro Komponentizaci HTML Emailů v4.3</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 40px);
+        background-color: #f0f2f5;
+      }
+      .container {
+        display: flex;
+        flex: 1;
+        gap: 20px;
+        min-height: 0;
+      }
+      .panel {
+        border: 1px solid #ccc;
+        padding: 10px;
+        overflow: auto;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+      .panel.preview-panel {
+        flex: 1.5;
+      }
+      #emailPreview {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ddd;
+        transition: width 0.3s ease-in-out;
+      }
+      #outputCode {
+        width: 100%;
+        flex-grow: 1;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre;
+      }
+      .controls {
+        margin-bottom: 20px;
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      h1,
+      h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      button,
+      input[type='file'] {
+        padding: 5px 10px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        background-color: #f7f7f7;
+        font-size: 14px;
+      }
+      button:hover {
+        background-color: #e9e9e9;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* STYLY PRO EDITOR STYLŮ A ROZBALOVACÍ PANEL */
+      #styleEditorPanel {
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        margin-top: 15px;
+        border-radius: 4px;
+        background-color: #fdfdfd;
+      }
+      #styleEditorPanel summary {
+        font-weight: bold;
+        cursor: pointer;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        color: #333;
+        font-size: 1.17em; /* Shodné s h2 */
+        border-bottom: 1px solid #eee;
+        list-style-position: inside; /* Zarovná šipku */
+      }
+      #styleInputsContainer div {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      #styleInputsContainer label {
+        flex: 0 0 120px; /* Pevná šířka pro labely */
+        font-size: 12px;
+        font-family: monospace;
+        padding-right: 10px;
+      }
+      #styleInputsContainer input {
+        flex-grow: 1;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 3px 5px;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+      }
+      #applyStylesBtn {
+        width: 100%;
+        margin-top: 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+      }
+      #applyStylesBtn:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Univerzální Nástroj pro Komponentizaci HTML Emailů v4.3</h1>
+
+    <div class="controls">
+      <input type="file" id="htmlFileInput" accept=".html,.htm" />
+      <label style="margin-left: 20px">
+        <input type="checkbox" id="componentModeCheckbox" checked />
+        Režim komponentizace (exportovat pouze vybraný blok)
+      </label>
+      <div style="margin-top: 15px; display: flex; align-items: flex-end; gap: 10px">
+        <div style="flex-grow: 1">
+          <label for="masterTemplateInput" style="display: block; margin-bottom: 5px">Master Template:</label>
+          <textarea
+            id="masterTemplateInput"
+            placeholder="Vložte obsah master šablony..."
+            style="width: 100%; height: 100px; margin-top: 0px; font-family: monospace; font-size: 10px; box-sizing: border-box"></textarea>
+        </div>
+        <button id="saveTemplateBtn">Uložit šablonu</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="panel preview-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
+          <h2 style="margin: 0">Náhled Emailu</h2>
+          <div id="previewControls">
+            <button id="desktopViewBtn">💻 Desktop</button>
+            <button id="mobileViewBtn" style="margin-left: 5px">📱 Mobil</button>
+          </div>
+        </div>
+        <iframe id="emailPreview"></iframe>
+      </div>
+      <div class="panel">
+        <h2>Extrahovaná Komponenta (HTML)</h2>
+        <div id="lcbControls" style="margin-bottom: 15px; display: none; border: 1px solid #e0e0e0; padding: 8px; border-radius: 4px; background-color: #f9f9f9">
+          <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold" id="lcbLabel"></p>
+          <button id="selectParentBtn">▲ Vybrat nadřazený prvek</button>
+          <button id="selectChildBtn" style="margin-left: 5px">▼ Vybrat první vnořený prvek</button>
+        </div>
+
+        <textarea id="outputCode" readonly></textarea>
+
+        <div style="margin: 10px 0">
+          <label><input type="checkbox" id="optimizeCodeCheckbox" checked /> Optimalizovat výstupní kód</label>
+        </div>
+
+        <button id="copyButton">Kopírovat kód</button>
+
+        <details id="styleEditorPanel" style="display: none">
+          <summary>Styly a Úpravy</summary>
+          <div class="style-editor-content">
+            <div id="styleInputsContainer">
+              <!-- Dynamicky se naplní JavaScriptem -->
+            </div>
+            <button id="applyStylesBtn">Aplikovat změny stylů</button>
+          </div>
+        </details>
+
+        <h2 style="margin-top: 15px">Logy Zpracování</h2>
+        <textarea id="logOutput" readonly style="width: 100%; height: 150px; margin-top: 5px; font-family: monospace; font-size: 10px; border: 1px solid #ccc; background-color: #f9f9f9"></textarea>
+      </div>
+    </div>
+
+    <script>
+      // --- GLOBÁLNÍ REFERENCE A STAV ---
+      const logOutputTextarea = document.getElementById('logOutput');
+      const htmlFileInput = document.getElementById('htmlFileInput');
+      const emailPreview = document.getElementById('emailPreview');
+      const outputCode = document.getElementById('outputCode');
+      const copyButton = document.getElementById('copyButton');
+      const componentModeCheckbox = document.getElementById('componentModeCheckbox');
+      const masterTemplateInput = document.getElementById('masterTemplateInput');
+      const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+      const desktopViewBtn = document.getElementById('desktopViewBtn');
+      const mobileViewBtn = document.getElementById('mobileViewBtn');
+      const lcbControls = document.getElementById('lcbControls');
+      const lcbLabel = document.getElementById('lcbLabel');
+      const selectParentBtn = document.getElementById('selectParentBtn');
+      const selectChildBtn = document.getElementById('selectChildBtn');
+      const optimizeCodeCheckbox = document.getElementById('optimizeCodeCheckbox');
+
+      const styleEditorPanel = document.getElementById('styleEditorPanel');
+      const styleInputsContainer = document.getElementById('styleInputsContainer');
+      const applyStylesBtn = document.getElementById('applyStylesBtn');
+
+      let masterNew2FullHtml = '';
+      let selectedElement = null;
+      let lastHoveredElement = null;
+
+      // --- KONFIGURACE PRO UNIVERZÁLNOST ---
+      const LOGICAL_BLOCK_SELECTORS = [
+        'table.es-header-body',
+        'table.es-content-body',
+        'table.es-footer-body',
+        'div.w',
+        '.r.lp.jn.lz.dhn',
+        'table.r.aue.uo8',
+        'div.r.aue.uo8',
+        'div.p > table > tbody > tr > td > .m.y',
+        'table[class*="es-adaptive"]',
+        'body > table > tbody > tr > td > table[width="100%"]',
+      ];
+
+      const STYLES_TO_TRACK = ['background-color', 'color', 'font-family', 'font-size', 'font-weight', 'line-height', 'text-align'];
+
+      // --- INICIALIZACE A LISTENERY ---
+      function initializeApp() {
+        const savedTemplate = localStorage.getItem('emailComponentTool_masterTemplate');
+        if (savedTemplate) {
+          masterTemplateInput.value = savedTemplate;
+          logMessage('Info: Master šablona úspěšně načtena z localStorage.');
+        }
+        addEventListeners();
+      }
+
+      function addEventListeners() {
+        htmlFileInput.addEventListener('change', handleFileLoad);
+        saveTemplateBtn.addEventListener('click', handleSaveTemplate);
+        desktopViewBtn.addEventListener('click', () => (emailPreview.style.width = '100%'));
+        mobileViewBtn.addEventListener('click', () => (emailPreview.style.width = '375px'));
+        selectParentBtn.addEventListener('click', handleSelectParent);
+        selectChildBtn.addEventListener('click', handleSelectChild);
+        copyButton.addEventListener('click', handleCopy);
+        applyStylesBtn.addEventListener('click', handleApplyStyles);
+      }
+
+      function logMessage(message) {
+        if (logOutputTextarea) {
+          logOutputTextarea.value += message + '\n';
+          logOutputTextarea.scrollTop = logOutputTextarea.scrollHeight;
+        }
+        console.log(message);
+      }
+
+      // --- EVENT HANDLERY ---
+      function handleFileLoad(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const emailContent = e.target.result;
+            const previewDoc = emailPreview.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(emailContent);
+            previewDoc.close();
+            resetUIState();
+            logMessage(`Soubor načten: ${file.name}`);
+            setTimeout(() => {
+              const previewBody = previewDoc.body;
+              if (!previewBody.hasAttribute('data-cline-listeners-attached')) {
+                addPreviewListeners(previewBody);
+              }
+            }, 500);
+          };
+          reader.readAsText(file);
+        }
+      }
+
+      function handleSaveTemplate() {
+        localStorage.setItem('emailComponentTool_masterTemplate', masterTemplateInput.value);
+        logMessage('Úspěch: Master šablona byla uložena do localStorage.');
+        alert('Šablona byla uložena.');
+      }
+
+      function handleSelectParent() {
+        if (selectedElement && selectedElement.parentElement && selectedElement.parentElement.tagName !== 'BODY') {
+          processNewSelection(selectedElement.parentElement);
+        }
+      }
+
+      function handleSelectChild() {
+        if (selectedElement && selectedElement.children.length > 0) {
+          processNewSelection(selectedElement.children[0]);
+        }
+      }
+
+      function addPreviewListeners(previewBody) {
+        previewBody.addEventListener('mouseover', (event) => {
+          if (event.target && event.target !== previewBody && event.target !== lastHoveredElement) {
+            if (lastHoveredElement && lastHoveredElement !== selectedElement) lastHoveredElement.style.outline = '';
+            if (event.target !== selectedElement) event.target.style.outline = '1px dashed green';
+            lastHoveredElement = event.target;
+          }
+        });
+        previewBody.addEventListener('mouseout', (event) => {
+          if (event.target && event.target === lastHoveredElement && event.target !== selectedElement) {
+            event.target.style.outline = '';
+            lastHoveredElement = null;
+          }
+        });
+        previewBody.addEventListener(
+          'click',
+          (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.target && event.target !== previewBody) {
+              processNewSelection(event.target);
+            }
+          },
+          true
+        );
+        previewBody.setAttribute('data-cline-listeners-attached', 'true');
+      }
+
+      function handleCopy() {
+        navigator.clipboard
+          .writeText(outputCode.value)
+          .then(() => {
+            alert('Kód zkopírován do schránky!');
+          })
+          .catch((err) => {
+            console.error('Chyba při kopírování:', err);
+            alert('Chyba při kopírování kódu.');
+          });
+      }
+
+      function handleApplyStyles() {
+        if (!selectedElement) {
+          alert('Není vybrán žádný prvek pro úpravu.');
+          return;
+        }
+        logMessage('Aplikuji uživatelské změny stylů...');
+        const inputs = styleInputsContainer.querySelectorAll('input[data-style-property]');
+        inputs.forEach((input) => {
+          const propName = input.dataset.styleProperty;
+          const newValue = input.value;
+          selectedElement.style.setProperty(propName, newValue);
+          logMessage(`- Aplikován styl: ${propName}: ${newValue}`);
+        });
+
+        logMessage('Změny stylů aplikovány. Přegenerovávám výstupní kód...');
+        runComponentization();
+        alert('Styly byly aktualizovány a kód přegenerován.');
+      }
+
+      // --- HLAVNÍ LOGIKA ZPRACOVÁNÍ ---
+      function processNewSelection(targetElement) {
+        if (selectedElement) {
+          selectedElement.style.outline = '';
+          selectedElement.removeAttribute('data-cline-selected');
+        }
+        selectedElement = targetElement;
+        selectedElement.style.outline = '2px solid red';
+        selectedElement.setAttribute('data-cline-selected', 'true');
+        if (lastHoveredElement === selectedElement) lastHoveredElement = null;
+        logMessage(`Nový výběr: <${selectedElement.tagName.toLowerCase()}${selectedElement.className ? ' class="' + selectedElement.className + '"' : ''}>`);
+
+        updateLcbControls();
+        displayComputedStyles(selectedElement);
+        runComponentization();
+      }
+
+      function updateLcbControls() {
+        if (!selectedElement) return;
+        lcbControls.style.display = 'block';
+        lcbLabel.textContent = `Aktuální výběr: <${selectedElement.tagName.toLowerCase()}>`;
+        selectParentBtn.disabled = !selectedElement.parentElement || selectedElement.parentElement.tagName === 'BODY';
+        selectChildBtn.disabled = !selectedElement.children || selectedElement.children.length === 0;
+      }
+
+      function displayComputedStyles(element) {
+        styleInputsContainer.innerHTML = '';
+        if (!element) {
+          styleEditorPanel.style.display = 'none';
+          return;
+        }
+
+        const computedStyles = emailPreview.contentWindow.getComputedStyle(element);
+
+        STYLES_TO_TRACK.forEach((prop) => {
+          const value = computedStyles.getPropertyValue(prop);
+          const inputGroup = document.createElement('div');
+
+          const label = document.createElement('label');
+          label.textContent = prop;
+          label.setAttribute('for', `style-input-${prop}`);
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.id = `style-input-${prop}`;
+          input.value = value;
+          input.dataset.styleProperty = prop;
+
+          inputGroup.appendChild(label);
+          inputGroup.appendChild(input);
+          styleInputsContainer.appendChild(inputGroup);
+        });
+
+        styleEditorPanel.style.display = 'block';
+        styleEditorPanel.open = true;
+      }
+
+      function runComponentization() {
+        if (!selectedElement) return;
+        logMessage('--- START ZPRACOVÁNÍ v4.3 ---');
+        logMessage(`Režim komponentizace: ${componentModeCheckbox.checked}`);
+        masterNew2FullHtml = masterTemplateInput.value;
+        if (!masterNew2FullHtml.trim()) {
+          logMessage('Varování: Master šablona je prázdná.');
+        } else {
+          logMessage('Master šablona načtena pro komponentizaci.');
+        }
+
+        let generatedHtml = standardizeComponent(selectedElement, componentModeCheckbox.checked);
+
+        if (optimizeCodeCheckbox.checked && componentModeCheckbox.checked) {
+          logMessage('Aplikuji finální optimalizace HTML...');
+          generatedHtml = optimizeHtml(generatedHtml);
+        }
+
+        outputCode.value = prettyPrintHtml(generatedHtml);
+        logMessage('--- KONEC ZPRACOVÁNÍ ---');
+      }
+
+      function resetUIState() {
+        outputCode.value = '';
+        if (logOutputTextarea) logOutputTextarea.value = '';
+        selectedElement = null;
+        lastHoveredElement = null;
+        lcbControls.style.display = 'none';
+
+        if (styleEditorPanel) {
+          styleEditorPanel.open = false;
+          styleEditorPanel.style.display = 'none';
+        }
+        if (styleInputsContainer) {
+          styleInputsContainer.innerHTML = '';
+        }
+      }
+
+      // --- KLÍČOVÉ FUNKCE PRO ZPRACOVÁNÍ ---
+
+      function findLogicalComponentBlock(element) {
+        logMessage(`Hledám logický blok komponenty (LCB) od <${element.tagName.toLowerCase()}>...`);
+        let current = element;
+        while (current && current.tagName !== 'BODY') {
+          for (const selector of LOGICAL_BLOCK_SELECTORS) {
+            try {
+              if (current.matches(selector)) {
+                logMessage(`✔ LCB nalezen: <${current.tagName.toLowerCase()}> odpovídá selektoru "${selector}".`);
+                return current;
+              }
+            } catch (e) {
+              logMessage(`! Chyba při testování selektoru "${selector}": ${e.message}`);
+            }
+          }
+          current = current.parentElement;
+        }
+        logMessage(`‼ Varování: Nebyl nalezen žádný LCB. Vracím původně vybraný prvek.`);
+        return element;
+      }
+
+      function extractRelevantStyles(lcbElement, sourceDocument) {
+        logMessage('Spouštím extrakci relevantních CSS stylů (v4.1)...');
+        const usedClassesAndIds = new Set();
+        const allElements = [lcbElement, ...lcbElement.querySelectorAll('*')];
+
+        allElements.forEach((el) => {
+          if (el.id) {
+            usedClassesAndIds.add(`#${el.id}`);
+          }
+          if (el.className && typeof el.className === 'string') {
+            el.className.split(/\s+/).forEach((cls) => {
+              if (cls) usedClassesAndIds.add(`.${cls}`);
+            });
+          }
+        });
+
+        logMessage(`- Nalezeno ${usedClassesAndIds.size} unikátních tříd a ID v komponentě.`);
+
+        const relevantCssRules = new Set();
+        const styleSheets = sourceDocument.styleSheets;
+
+        const isSelectorRelevant = (selectorText) => {
+          const individualSelectors = selectorText.split(',').map((s) => s.trim());
+          for (const selector of individualSelectors) {
+            const identifiersInRule = selector.match(/\.[\w-]+|#[\w-]+/g) || [];
+            if (identifiersInRule.some((identifier) => usedClassesAndIds.has(identifier))) {
+              return true;
+            }
+          }
+          return false;
+        };
+
+        for (const sheet of styleSheets) {
+          try {
+            if (!sheet.cssRules) continue;
+            for (const rule of sheet.cssRules) {
+              if (rule instanceof CSSStyleRule) {
+                if (isSelectorRelevant(rule.selectorText)) {
+                  relevantCssRules.add(rule.cssText);
+                }
+              } else if (rule instanceof CSSMediaRule) {
+                let relevantMediaStyles = '';
+                for (const innerRule of rule.cssRules) {
+                  if (innerRule instanceof CSSStyleRule && isSelectorRelevant(innerRule.selectorText)) {
+                    relevantMediaStyles += `\n  ${innerRule.cssText}`;
+                  }
+                }
+                if (relevantMediaStyles) {
+                  relevantCssRules.add(`@media ${rule.conditionText} {${relevantMediaStyles}\n}`);
+                }
+              }
+            }
+          } catch (e) {
+            logMessage(`! Chyba při čtení stylů (pravděpodobně CORS nebo bezpečnostní omezení): ${e.message}`);
+          }
+        }
+        logMessage(`✔ Extrahováno ${relevantCssRules.size} relevantních CSS pravidel.`);
+        return Array.from(relevantCssRules).join('\n');
+      }
+
+      function standardizeComponent(sourceElementFromIframe, isComponentMode) {
+        const identifiedLcbOriginalElement = findLogicalComponentBlock(sourceElementFromIframe);
+
+        // --- OPRAVENÁ LOGIKA v4.3 ---
+        let componentBoundary = identifiedLcbOriginalElement;
+        const parentCell = identifiedLcbOriginalElement.parentElement;
+
+        if (parentCell && parentCell.tagName === 'TD' && parentCell.closest('table.es-header-body, table.es-content-body, table.es-footer-body')) {
+          logMessage('i LCB je uvnitř hlavní struktury emailu. Rozšiřuji hranice komponenty na rodičovskou buňku TD, aby se zachoval kontext (padding atd.).');
+          componentBoundary = parentCell;
+        } else {
+          logMessage('i Komponenta je na nejvyšší úrovni (LCB = hranice komponenty).');
+        }
+
+        let lcbClone = componentBoundary.cloneNode(true);
+
+        // Očištění klonu od UI prvků
+        lcbClone.removeAttribute('data-cline-selected');
+        if (lcbClone.style) lcbClone.style.outline = '';
+        lcbClone.querySelectorAll('[data-cline-selected]').forEach((el) => {
+          el.removeAttribute('data-cline-selected');
+          if (el.style) el.style.outline = '';
+        });
+
+        // Spustíme transformaci DIV->TABLE, pokud je potřeba (uvnitř klonu)
+        const problematicDivContainer = lcbClone.querySelector('.m.y.wa');
+        if (problematicDivContainer) {
+          const columns = problematicDivContainer.querySelectorAll(':scope > .u.y, :scope > .u.y');
+          if (columns.length === 2) {
+            logMessage('✔ Transformuji nespolehlivý 2-sloupcový DIV layout na bulletproof TABLE.');
+            const rebuiltTable = document.createElement('table');
+            rebuiltTable.setAttribute('role', 'presentation');
+            rebuiltTable.setAttribute('border', '0');
+            rebuiltTable.setAttribute('cellpadding', '0');
+            rebuiltTable.setAttribute('cellspacing', '0');
+            rebuiltTable.setAttribute('width', '100%');
+            const tbody = document.createElement('tbody');
+            const tr = document.createElement('tr');
+            const leftTd = document.createElement('td');
+            leftTd.setAttribute('width', '50%');
+            leftTd.style.width = '50%';
+            leftTd.style.verticalAlign = 'middle';
+            leftTd.innerHTML = columns[0].innerHTML;
+            const rightTd = document.createElement('td');
+            rightTd.setAttribute('width', '50%');
+            rightTd.style.width = '50%';
+            rightTd.style.verticalAlign = 'middle';
+            rightTd.innerHTML = columns[1].innerHTML;
+            tr.appendChild(leftTd);
+            tr.appendChild(rightTd);
+            tbody.appendChild(tr);
+            rebuiltTable.appendChild(tbody);
+            problematicDivContainer.parentNode.replaceChild(rebuiltTable, problematicDivContainer);
+          }
+        }
+
+        if (isComponentMode) {
+          logMessage('Standardizace komponenty (Režim v4.3 - soběstačný)');
+
+          const relevantStyles = extractRelevantStyles(lcbClone, emailPreview.contentWindow.document);
+          const styleBlock = relevantStyles ? `<style type="text/css">\n${relevantStyles}\n</style>\n` : '';
+          logMessage(`- Komponenta zabalena s ${relevantStyles ? 'vlastními' : 'žádnými'} CSS styly.`);
+
+          let finalHtml;
+
+          // Vždy vytvoříme tabulkový wrapper, aby byla komponenta izolovaná a předvídatelná
+          logMessage('- Vytvářím nový tabulkový wrapper pro zajištění konzistence a odsazení.');
+          const wrapperTable = document.createElement('table');
+          wrapperTable.setAttribute('cellpadding', '0');
+          wrapperTable.setAttribute('cellspacing', '0');
+          wrapperTable.setAttribute('width', '100%');
+          wrapperTable.setAttribute('role', 'presentation');
+          const wrapperTbody = wrapperTable.appendChild(document.createElement('tbody'));
+          const wrapperTr = wrapperTbody.appendChild(document.createElement('tr'));
+
+          if (lcbClone.tagName === 'TD') {
+            // Pokud jsme extrahovali celou buňku, vložíme ji přímo
+            wrapperTr.appendChild(lcbClone);
+          } else {
+            // Pokud jsme extrahovali blok (TABLE, DIV), zabalíme ho do nové TD
+            const wrapperTd = wrapperTr.appendChild(document.createElement('td'));
+            wrapperTd.appendChild(lcbClone);
+          }
+          finalHtml = wrapperTable.outerHTML;
+
+          return styleBlock + finalHtml;
+        } else {
+          // Režim plného náhledu
+          logMessage('Standardizace komponenty (Režim plného náhledu)');
+          if (!masterNew2FullHtml) {
+            logMessage('Chyba: Master šablona není k dispozici pro plný náhled.');
+            return lcbClone.outerHTML;
+          }
+          const parser = new DOMParser();
+          const masterDoc = parser.parseFromString(masterNew2FullHtml, 'text/html');
+          const contentSlot = masterDoc.querySelector('div[data-type="slot"][data-key="main_content_area"]');
+          if (contentSlot) {
+            contentSlot.innerHTML = '';
+            contentSlot.appendChild(lcbClone);
+            logMessage('LCB vložen do slotu v master šabloně pro náhled.');
+          } else {
+            logMessage('Chyba: Slot [data-key="main_content_area"] v master šabloně nenalezen.');
+            masterDoc.body.appendChild(lcbClone);
+          }
+          return masterDoc.documentElement.outerHTML;
+        }
+      }
+
+      // --- POMOCNÉ FUNKCE (OPTIMALIZACE, PRETTY PRINT) ---
+      function optimizeHtml(html) {
+        if (!html) return '';
+        let optimized = html;
+        optimized = optimized.replace(/(\d+\.\d+)(px|em|rem|%|pt)/g, (m, n, u) => `${Math.round(parseFloat(n))}${u}`);
+        optimized = optimized.replace(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/g, (m, r, g, b) => {
+          const toHex = (c) => ('0' + parseInt(c, 10).toString(16)).slice(-2);
+          return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        });
+        optimized = optimized.replace(/\s*style=""/g, '');
+        return optimized;
+      }
+
+      function prettyPrintHtml(htmlString) {
+        let formatted = '';
+        let indent = 0;
+        const tab = '  ';
+        if (!htmlString) return '';
+        htmlString = htmlString.replace(/>\s*</g, '><');
+        htmlString.split(/(?=<)/).forEach((element) => {
+          if (element.match(/^<\/\w/)) {
+            indent--;
+          }
+          let padding = '';
+          for (let i = 0; i < indent; i++) {
+            padding += tab;
+          }
+          formatted += padding + element + '\r\n';
+          if (element.match(/^<[^\/]/) && !element.match(/\/?>$/) && !element.match(/<area|base|br|col|embed|hr|img|input|keygen|link|meta|param|source|track|wbr/i)) {
+            indent++;
+          }
+        });
+        return formatted.trim();
+      }
+
+      // --- SPUŠTĚNÍ APLIKACE ---
+      initializeApp();
+    </script>
+  </body>
+</html>
