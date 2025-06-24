@@ -221,15 +221,22 @@
 
       // --- KONFIGURACE PRO UNIVERZÁLNOST ---
       const LOGICAL_BLOCK_SELECTORS = [
-        // NOVÉ A SPECIFIČTĚJŠÍ SELEKTORY PRO TLAČÍTKA A MALÉ BLOKY
-        // Cílí na vnitřní tabulku tlačítka, která definuje jeho rozměry
-        'table[role="presentation"][style*="separate"][style*="width:"][style*="px"]', // např. <table role="presentation" style="border-collapse: separate; width: 250px;">
-        'td > table[role="presentation"][style*="width:"][style*="px"]', // Tabulka s pevnou šířkou uvnitř TD
-        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"] > span', // Pokud by se kliklo přímo na span uvnitř odkazu tlačítka
-        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"]',    // Samotný odkaz tlačítka
+        // === NEJVYŠŠÍ PRIORITA PRO SPECIFICKÉ TLAČÍTKO ===
+        // Přesný selektor pro tabulku tlačítka z email-1.html, která má width="250px" a specifický styl.
+        // Používáme atribut width přímo, pokud je přítomen, a doplňujeme kontrolou stylu.
+        'table[width="250"][role="presentation"][style*="border-collapse: separate"]', // Primární pro tlačítko 250px
+        'table[role="presentation"][style*="width: 250px"][style*="border-collapse: separate"]', // Alternativa, pokud width není atribut
 
-        // Selektory z email-1 (Carvago) - seřazeno od specifičtějších
-        'div.n.y', // Kontejner pro tlačítko v email-1 (např. "Shikoni gamën e veturave")
+        // Obecnější selektory pro tabulky s pevnou pixelovou šířkou (často tlačítka nebo malé bloky)
+        'table[role="presentation"][style*="width:"][style*="px"][style*="border-collapse: separate"]', // Tabulky s pevnou šířkou a oddělenými okraji
+        'table[role="presentation"][style*="width:"][style*="px"]', // Jakákoliv tabulka s role="presentation" a pevnou pixelovou šířkou ve stylu
+
+        // Selektory pro odkazy stylizované jako tlačítka
+        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"]',    // Samotný odkaz tlačítka
+        'a[style*="display:"][style*="inline-block"][style*="padding:"][style*="width:"] > span', // Pokud by se kliklo přímo na span uvnitř odkazu tlačítka
+
+        // Selektory z email-1 (Carvago) - pro větší bloky
+        'div.n.y', // Kontejner pro tlačítko v email-1 (pokud by se kliklo na něj)
         '.r.lp.jn.lz.dhn', // Header vnitřní DIV v email-1
         'div.r.eya.yss', // Kontejner pro jednotlivé položky v sekcích jako "Garancion", recenze, tlačítkový blok v email-1
         'div.r.aue.uo8',   // Textové bloky / Video bloky v email-1 (alternativa k table)
@@ -250,11 +257,11 @@
 
         // OBECNÉ A FALLBACK SELEKTORY (NIŽŠÍ PRIORITA)
         'table[class*="es-adaptive"]',
-        'td > table[role="presentation"]', // Obecná tabulka v TD, méně specifická než ty s pevnou šířkou
-        'body > table > tbody > tr > td > table[role="presentation"]',
-        // Poslední záchrana - jakákoliv tabulka s role="presentation", pokud nic jiného nesedí
-        // 'div > table[role="presentation"]', // Tento byl problematický, nahrazen obecnějším table[role="presentation"]
-        'table[role="presentation"]'
+        // Selektor 'td > table[role="presentation"]' je hodně obecný, posuneme ho níže nebo zvážíme jeho specificitu
+        'td > table[role="presentation"][style*="width:"][style*="px"]', // Upřesnění: tabulka s pevnou šířkou uvnitř TD
+        'body > table > tbody > tr > td > table[role="presentation"]', // Tabulka hlouběji vnořená
+        'div > table[role="presentation"]', // Tento byl v logu, ponecháme ho, ale s nižší prioritou
+        'table[role="presentation"]' // Nejobecnější fallback pro tabulky
       ];
 
       const STYLES_TO_TRACK = ['background-color', 'color', 'font-family', 'font-size', 'font-weight', 'line-height', 'text-align', 'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'];
@@ -524,22 +531,39 @@
       // --- KLÍČOVÉ FUNKCE PRO ZPRACOVÁNÍ ---
 
       function findLogicalComponentBlock(element) {
-        logMessage(`Hledám logický blok komponenty (LCB) od <${element.tagName.toLowerCase()}>...`);
+        logMessage(`🔎 Hledám logický blok komponenty (LCB) od <${element.tagName.toLowerCase()} class="${element.className || ''}">...`);
         let current = element;
-        while (current && current.tagName !== 'BODY') {
+        let depth = 0;
+        while (current && current.tagName !== 'BODY' && depth < 10) { // Přidán limit hloubky pro bezpečnost
+          const currentTagName = current.tagName.toLowerCase();
+          const currentClassName = current.className || '';
+          logMessage(`  Depth ${depth}: Testuji element <${currentTagName} class="${currentClassName}">`);
           for (const selector of LOGICAL_BLOCK_SELECTORS) {
+            let matches = false;
             try {
-              if (current.matches(selector)) {
-                logMessage(`✔ LCB nalezen: <${current.tagName.toLowerCase()}> odpovídá selektoru "${selector}".`);
-                return current;
-              }
+              matches = current.matches(selector);
             } catch (e) {
-              logMessage(`! Chyba při testování selektoru "${selector}": ${e.message}`);
+              logMessage(`    ! Chyba při current.matches('${selector}') na <${currentTagName}>: ${e.message.split('\\n')[0]}`);
+              continue; // Přeskočí na další selektor
+            }
+
+            if (matches) {
+              logMessage(`    👍 SHODA! <${currentTagName} class="${currentClassName}"> odpovídá selektoru "${selector}". Vracím tento element jako LCB.`);
+              return current;
+            } else {
+              // Logovat neshodu pouze pokud je to užitečné (může být velmi verbose)
+              // logMessage(`    -- Neshoda: <${currentTagName}> s selektorem "${selector}"`);
             }
           }
           current = current.parentElement;
+          depth++;
         }
-        logMessage(`‼ Varování: Nebyl nalezen žádný LCB. Vracím původně vybraný prvek.`);
+        if (depth >= 10) {
+            logMessage(`🛑 Varování: Překročen limit hloubky (10) při hledání LCB. Vracím původně vybraný prvek.`);
+        } else if (!current || current.tagName === 'BODY') {
+            logMessage(`ℹ️ Dosáhnuto BODY nebo null elementu při hledání LCB.`);
+        }
+        logMessage(`‼ Varování: Nebyl nalezen žádný LCB pomocí definovaných selektorů. Vracím původně vybraný prvek: <${element.tagName.toLowerCase()} class="${element.className || ''}">.`);
         return element;
       }
 
@@ -840,23 +864,91 @@ function standardizeComponent(sourceElementFromIframe, isComponentMode) {
           logMessage(`- Komponenta zabalena s ${relevantStyles ? 'vlastními' : 'žádnými'} CSS styly.`);
 
           let finalHtml;
+          let componentOriginalWidth = null;
 
-          // Vždy vytvoříme tabulkový wrapper, aby byla komponenta izolovaná a předvídatelná
+          // Zjistíme původní šířku komponenty pro správné nastavení wrapperu
+          if (lcbClone.style && lcbClone.style.width && lcbClone.style.width.endsWith('px')) {
+            componentOriginalWidth = lcbClone.style.width;
+          } else if (lcbClone.getAttribute('width') && /^\\d+(px)?$/.test(lcbClone.getAttribute('width').trim())) {
+            componentOriginalWidth = lcbClone.getAttribute('width').trim().endsWith('px') ? lcbClone.getAttribute('width').trim() : lcbClone.getAttribute('width').trim() + 'px';
+          }
+
           logMessage('- Vytvářím nový tabulkový wrapper pro zajištění konzistence a odsazení.');
           const wrapperTable = document.createElement('table');
           wrapperTable.setAttribute('cellpadding', '0');
           wrapperTable.setAttribute('cellspacing', '0');
-          wrapperTable.setAttribute('width', '100%');
           wrapperTable.setAttribute('role', 'presentation');
+          // wrapperTable.setAttribute('border', '1'); // Pro debugování
+          // wrapperTable.style.borderColor = 'blue'; // Pro debugování
+
           const wrapperTbody = wrapperTable.appendChild(document.createElement('tbody'));
           const wrapperTr = wrapperTbody.appendChild(document.createElement('tr'));
+          const wrapperTd = wrapperTr.appendChild(document.createElement('td'));
+
+          if (componentOriginalWidth) {
+            // Pokud má komponenta pevnou šířku, wrapperTable ji převezme a centruje se,
+            // nebo necháme wrapperTable 100% a centrujeme obsah v TD.
+            // Pro tlačítko je lepší, když samotná tabulka tlačítka má pevnou šířku.
+            // WrapperTable bude 100% pro případné pozadí, wrapperTd bude centrovat.
+            wrapperTable.setAttribute('width', '100%');
+            wrapperTd.setAttribute('align', 'center'); // Centruje obsah TD
+            logMessage(`- Komponenta má původní šířku ${componentOriginalWidth}. Wrapper TD bude centrovat.`);
+            // Zajistíme, že samotný lcbClone (tlačítko) si udrží svou šířku
+            lcbClone.style.width = componentOriginalWidth;
+            lcbClone.style.maxWidth = componentOriginalWidth; // Důležité pro Outlook
+             if (lcbClone.tagName === 'TABLE') { // Pokud je lcbClone tabulka (což by tlačítko mělo být)
+                lcbClone.setAttribute('align', 'center'); // Pro Outlook centrování tabulky
+                lcbClone.style.margin = '0 auto'; // Pro moderní klienty centrování tabulky
+
+                // Pojistka pro šířku odkazu <a> uvnitř tlačítka
+                const buttonLink = lcbClone.querySelector('a[style*="width"]');
+                if (buttonLink && componentOriginalWidth) {
+                    if (!buttonLink.style.width || buttonLink.style.width !== componentOriginalWidth) {
+                        logMessage(`- Upravuji šířku vnitřního odkazu <a> na ${componentOriginalWidth}. Původní: "${buttonLink.style.width}"`);
+                        buttonLink.style.width = componentOriginalWidth;
+                    }
+                    // Zajistíme, aby i odkaz měl max-width, pokud by byl příliš agresivně responzivní
+                    if (!buttonLink.style.maxWidth || buttonLink.style.maxWidth !== componentOriginalWidth) {
+                         buttonLink.style.maxWidth = componentOriginalWidth;
+                    }
+                    // Ujistíme se, že display: inline-block je zachován, pokud chybí
+                    if (!buttonLink.style.display || !buttonLink.style.display.includes('inline-block')) {
+                        logMessage(`- Doplňuji/Opravuji display: inline-block na vnitřním odkazu <a>.`);
+                        buttonLink.style.display = 'inline-block';
+                    }
+                } else if (buttonLink && !componentOriginalWidth) {
+                    logMessage('- Komponenta nemá pevnou šířku, ale vnitřní odkaz ano. Ponechávám šířku odkazu, ale zkontroluji responzivitu.');
+                    // Pokud by hlavní komponenta byla fluidní, ale tlačítko uvnitř mělo pevnou šířku,
+                    // je třeba zvážit, zda to je chtěné chování. Prozatím ponecháme.
+                }
+            }
+          } else {
+            // Pokud komponenta nemá pevnou šířku, wrapperTable a wrapperTd budou 100%
+            wrapperTable.setAttribute('width', '100%');
+            wrapperTd.setAttribute('align', 'left'); // Nebo podle potřeby
+            logMessage('- Komponenta nemá detekovanou pevnou šířku. Wrapper bude fluidní.');
+          }
+
 
           if (lcbClone.tagName === 'TD') {
-            // Pokud jsme extrahovali celou buňku, vložíme ji přímo
-            wrapperTr.appendChild(lcbClone);
+            // Pokud jsme extrahovali celou buňku (což by pro tlačítko nemělo nastat, pokud je LCB table)
+            // Přesto zachováme logiku, ale wrapperTd už máme.
+            // V tomto případě by lcbClone (TD) nahradil wrapperTd.
+            // To je ale komplexnější, pro tlačítko předpokládáme, že LCB je TABLE.
+            // Pro jednoduchost: pokud je lcbClone TD, jeho obsah se přesune do wrapperTd
+            while (lcbClone.firstChild) {
+                wrapperTd.appendChild(lcbClone.firstChild);
+            }
+            // Převezmeme styly a atributy z původní TD do wrapperTd
+            Array.from(lcbClone.attributes).forEach(attr => {
+                if (attr.name !== 'width' && attr.name !== 'align') { // width a align řídíme explicitně
+                    wrapperTd.setAttribute(attr.name, attr.value);
+                }
+            });
+            logMessage('- LCB byl TD element. Jeho obsah a atributy (kromě width/align) byly přeneseny do wrapperTd.');
+
           } else {
-            // Pokud jsme extrahovali blok (TABLE, DIV), zabalíme ho do nové TD
-            const wrapperTd = wrapperTr.appendChild(document.createElement('td'));
+            // Pokud jsme extrahovali blok (TABLE, DIV), zabalíme ho do wrapperTd
             wrapperTd.appendChild(lcbClone);
           }
           finalHtml = wrapperTable.outerHTML;
